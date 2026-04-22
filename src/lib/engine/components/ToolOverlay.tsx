@@ -21,12 +21,12 @@ import {
 } from '@/lib/engine/constants';
 import { getDPR } from '@/lib/engine/toolUtils';
 import type { SubagentCharacter } from '@/hooks/useExtensionMessages';
-import type { OfficeState } from '@/lib/engine/engine/officeState';
+import type { ArchiveEngine } from '@/lib/engine/engine/ArchiveEngine';
 import type { ToolActivity } from '@/lib/engine/types';
 import { CharacterState, TILE_SIZE } from '@/lib/engine/types';
 
 interface ToolOverlayProps {
-  officeState: OfficeState;
+  archiveEngine: ArchiveEngine;
   agents: number[];
   agentTools: Record<number, ToolActivity[]>;
   subagentCharacters: SubagentCharacter[];
@@ -69,7 +69,7 @@ function getFuelColor(ratio: number): string {
 }
 
 export function ToolOverlay({
-  officeState,
+  archiveEngine,
   agents,
   agentTools,
   subagentCharacters,
@@ -103,14 +103,14 @@ export function ToolOverlay({
   const dpr = getDPR();
   const canvasW = Math.round(containerRect.width * dpr);
   const canvasH = Math.round(containerRect.height * dpr);
-  const layout = officeState.getLayout();
+  const layout = archiveEngine.getLayout();
   const mapW = layout.cols * TILE_SIZE * zoom;
   const mapH = layout.rows * TILE_SIZE * zoom;
   const deviceOffsetX = Math.floor((canvasW - mapW) / 2) + Math.round(panRef.current?.x ?? 0);
   const deviceOffsetY = Math.floor((canvasH - mapH) / 2) + Math.round(panRef.current?.y ?? 0);
 
-  const selectedId = officeState.selectedAgentId;
-  const hoveredId = officeState.hoveredAgentId;
+  const selectedId = archiveEngine.selectedAgentId;
+  const hoveredId = archiveEngine.hoveredAgentId;
 
   // All character IDs
   const allIds = [...agents, ...subagentCharacters.map((s) => s.id)];
@@ -118,7 +118,7 @@ export function ToolOverlay({
   return (
     <>
       {allIds.map((id) => {
-        const ch = officeState.characters.get(id);
+        const ch = archiveEngine.characters.get(id);
         if (!ch) return null;
 
         const isSelected = selectedId === id;

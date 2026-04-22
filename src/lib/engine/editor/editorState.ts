@@ -1,6 +1,6 @@
 import type { ColorValue } from '@/components/ui/types';
 import { DEFAULT_FLOOR_COLOR, DEFAULT_WALL_COLOR, UNDO_STACK_MAX_SIZE } from '@/lib/engine/constants';
-import type { OfficeLayout, TileType as TileTypeVal } from '@/lib/engine/types';
+import type { ArchiveLayout, TileType as TileTypeVal } from '@/lib/engine/types';
 import { EditTool, TileType } from '@/lib/engine/types';
 
 export class EditorState {
@@ -36,8 +36,8 @@ export class EditorState {
   isDragging = false;
 
   // Undo / Redo stacks
-  undoStack: OfficeLayout[] = [];
-  redoStack: OfficeLayout[] = [];
+  undoStack: ArchiveLayout[] = [];
+  redoStack: ArchiveLayout[] = [];
 
   // Dirty flag — true when layout differs from last save
   isDirty = false;
@@ -50,7 +50,7 @@ export class EditorState {
   dragOffsetRow = 0;
   isDragMoving = false;
 
-  pushUndo(layout: OfficeLayout): void {
+  pushUndo(layout: ArchiveLayout): void {
     this.undoStack.push(layout);
     // Limit undo stack size
     if (this.undoStack.length > UNDO_STACK_MAX_SIZE) {
@@ -58,18 +58,18 @@ export class EditorState {
     }
   }
 
-  popUndo(): OfficeLayout | null {
+  popUndo(): ArchiveLayout | null {
     return this.undoStack.pop() || null;
   }
 
-  pushRedo(layout: OfficeLayout): void {
+  pushRedo(layout: ArchiveLayout): void {
     this.redoStack.push(layout);
     if (this.redoStack.length > UNDO_STACK_MAX_SIZE) {
       this.redoStack.shift();
     }
   }
 
-  popRedo(): OfficeLayout | null {
+  popRedo(): ArchiveLayout | null {
     return this.redoStack.pop() || null;
   }
 
@@ -145,6 +145,23 @@ export class EditorState {
 
   setPickedFurnitureColor(color: ColorValue | null): void {
     this.pickedFurnitureColor = color;
+  }
+
+  setGhostPosition(col: number, row: number): void {
+    this.ghostCol = col;
+    this.ghostRow = row;
+  }
+
+  setIsDragging(val: boolean): void {
+    this.isDragging = val;
+  }
+
+  setIsDragMoving(val: boolean): void {
+    this.isDragMoving = val;
+  }
+
+  setSelectedFurnitureUid(uid: string | null): void {
+    this.selectedFurnitureUid = uid;
   }
 
   reset(): void {

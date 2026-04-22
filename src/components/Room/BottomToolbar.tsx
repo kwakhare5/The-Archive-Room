@@ -121,7 +121,7 @@ export function BottomToolbar({
       <Button
         variant={isEditMode ? 'active' : 'default'}
         onClick={onToggleEditMode}
-        title={isLocked ? 'Layout is locked' : 'Edit office layout'}
+        title={isLocked ? 'Layout is locked' : 'Edit archive layout'}
         className={isLocked ? 'opacity-50 cursor-not-allowed grayscale' : ''}
       >
         {isLocked ? '🔒 Layout' : 'Layout'}

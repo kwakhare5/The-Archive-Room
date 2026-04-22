@@ -61,7 +61,7 @@ export const TileType = {
 } as const;
 export type TileType = (typeof TileType)[keyof typeof TileType];
 
-/** Re-export ColorValue for consumers that import color types from office/types */
+/** Re-export ColorValue for consumers that import color types from engine/types */
 export type { ColorValue } from '@/components/ui/types';
 import type { ColorValue } from '@/components/ui/types';
 
@@ -162,7 +162,7 @@ export interface PlacedFurniture {
   color?: ColorValue;
 }
 
-export interface OfficeLayout {
+export interface ArchiveLayout {
   version: 1;
   cols: number;
   rows: number;

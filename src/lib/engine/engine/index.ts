@@ -6,7 +6,7 @@ export {
 } from './characters';
 export type { GameLoopCallbacks } from './gameLoop';
 export { startGameLoop } from './gameLoop';
-export { OfficeState } from './officeState';
+export { ArchiveEngine } from './ArchiveEngine';
 export type { DeleteButtonBounds, EditorRenderState, SelectionRenderState } from './renderer';
 export {
   renderDeleteButton,

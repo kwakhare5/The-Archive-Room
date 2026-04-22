@@ -15,7 +15,7 @@ import {
   toggleFurnitureState,
 } from '@/lib/engine/editor/editorActions';
 import type { EditorState } from '@/lib/engine/editor/editorState';
-import type { OfficeState } from '@/lib/engine/engine/officeState';
+import type { ArchiveEngine } from '@/lib/engine/engine/ArchiveEngine';
 import {
   getCatalogEntry,
   getRotatedType,
@@ -24,7 +24,7 @@ import {
 import { defaultZoom } from '@/lib/engine/toolUtils';
 import type {
   EditTool as EditToolType,
-  OfficeLayout,
+  ArchiveLayout,
   PlacedFurniture,
   TileType as TileTypeVal,
 } from '@/lib/engine/types';
@@ -39,7 +39,7 @@ interface EditorActions {
   zoom: number;
   panRef: React.MutableRefObject<{ x: number; y: number }>;
   saveTimerRef: React.MutableRefObject<ReturnType<typeof setTimeout> | null>;
-  setLastSavedLayout: (layout: OfficeLayout) => void;
+  setLastSavedLayout: (layout: ArchiveLayout) => void;
   handleOpenClaude: () => void;
   handleToggleEditMode: () => void;
   handleToolChange: (tool: EditToolType) => void;
@@ -66,7 +66,7 @@ interface EditorActions {
 }
 
 export function useEditorActions(
-  getOfficeState: () => OfficeState,
+  getArchiveEngine: () => ArchiveEngine,
   editorState: EditorState,
 ): EditorActions {
   const [isEditMode, setIsEditMode] = useState(false);
@@ -75,15 +75,15 @@ export function useEditorActions(
   const [zoom, setZoom] = useState(defaultZoom);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const panRef = useRef({ x: 0, y: 0 });
-  const lastSavedLayoutRef = useRef<OfficeLayout | null>(null);
+  const lastSavedLayoutRef = useRef<ArchiveLayout | null>(null);
 
   // Called by useExtensionMessages on layoutLoaded to set the initial checkpoint
-  const setLastSavedLayout = useCallback((layout: OfficeLayout) => {
+  const setLastSavedLayout = useCallback((layout: ArchiveLayout) => {
     lastSavedLayoutRef.current = structuredClone(layout);
   }, []);
 
   // Debounced layout save
-  const saveLayout = useCallback((layout: OfficeLayout) => {
+  const saveLayout = useCallback((layout: ArchiveLayout) => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
       vscode.postMessage({ type: 'saveLayout', layout });
@@ -92,23 +92,23 @@ export function useEditorActions(
 
   // Apply a layout edit: push undo, clear redo, rebuild state, save, mark dirty
   const applyEdit = useCallback(
-    (newLayout: OfficeLayout) => {
-      const os = getOfficeState();
-      if (os.getLayout().isLocked) return;
-      editorState.pushUndo(os.getLayout());
+    (newLayout: ArchiveLayout) => {
+      const engine = getArchiveEngine();
+      if (engine.getLayout().isLocked) return;
+      editorState.pushUndo(engine.getLayout());
       editorState.clearRedo();
       editorState.setDirty(true);
       setIsDirty(true);
-      os.rebuildFromLayout(newLayout);
+      engine.rebuildFromLayout(newLayout);
       saveLayout(newLayout);
       setEditorTick((n) => n + 1);
     },
-    [getOfficeState, editorState, saveLayout],
+    [getArchiveEngine, editorState, saveLayout],
   );
 
   const handleToggleLock = useCallback(() => {
-    const os = getOfficeState();
-    const layout = os.getLayout();
+    const engine = getArchiveEngine();
+    const layout = engine.getLayout();
     const newLayout = { ...layout, isLocked: !layout.isLocked };
     
     // If locking, exit edit mode
@@ -120,10 +120,10 @@ export function useEditorActions(
       editorState.clearDrag();
     }
 
-    os.rebuildFromLayout(newLayout);
+    engine.rebuildFromLayout(newLayout);
     vscode.postMessage({ type: 'saveLayout', layout: newLayout });
     setEditorTick((n) => n + 1);
-  }, [getOfficeState, editorState]);
+  }, [getArchiveEngine, editorState]);
 
   const handleOpenClaude = useCallback(() => {
     vscode.postMessage({ type: 'openClaude' });
@@ -131,7 +131,7 @@ export function useEditorActions(
 
   const handleToggleEditMode = useCallback(() => {
     setIsEditMode((prev) => {
-      const layout = getOfficeState().getLayout();
+      const layout = getArchiveEngine().getLayout();
       if (layout.isLocked) {
         handleToggleLock(); // Unlock if clicking while locked
         return false;
@@ -140,8 +140,8 @@ export function useEditorActions(
       editorState.setIsEditMode(next);
       if (next) {
         // Initialize wallColor from existing wall tiles so new walls match
-        const os = getOfficeState();
-        const layout = os.getLayout();
+        const engine = getArchiveEngine();
+        const layout = engine.getLayout();
         if (layout.tileColors) {
           for (let i = 0; i < layout.tiles.length; i++) {
             if (layout.tiles[i] === TileType.WALL && layout.tileColors[i]) {
@@ -158,7 +158,7 @@ export function useEditorActions(
       }
       return next;
     });
-  }, [editorState, getOfficeState, handleToggleLock]);
+  }, [editorState, getArchiveEngine, handleToggleLock]);
 
   // Tool toggle: clicking already-active tool deselects it (returns to SELECT)
   const handleToolChange = useCallback(
@@ -202,8 +202,8 @@ export function useEditorActions(
       editorState.setWallColor(color);
 
       // Update all existing wall tiles to the new color
-      const os = getOfficeState();
-      const layout = os.getLayout();
+      const engine = getArchiveEngine();
+      const layout = engine.getLayout();
       const existingColors = layout.tileColors || new Array(layout.tiles.length).fill(null);
       const newColors = [...existingColors];
       let changed = false;
@@ -223,12 +223,12 @@ export function useEditorActions(
         const newLayout = { ...layout, tileColors: newColors };
         editorState.setDirty(true);
         setIsDirty(true);
-        os.rebuildFromLayout(newLayout);
+        engine.rebuildFromLayout(newLayout);
         saveLayout(newLayout);
       }
       setEditorTick((n) => n + 1);
     },
-    [editorState, getOfficeState, saveLayout],
+    [editorState, getArchiveEngine, saveLayout],
   );
 
   const handleWallSetChange = useCallback(
@@ -247,8 +247,8 @@ export function useEditorActions(
     (color: ColorValue | null) => {
       const uid = editorState.selectedFurnitureUid;
       if (!uid) return;
-      const os = getOfficeState();
-      const layout = os.getLayout();
+      const engine = getArchiveEngine();
+      const layout = engine.getLayout();
 
       // Push undo only once per selection (first slider touch)
       if (colorEditUidRef.current !== uid) {
@@ -265,11 +265,11 @@ export function useEditorActions(
 
       editorState.setDirty(true);
       setIsDirty(true);
-      os.rebuildFromLayout(newLayout);
+      engine.rebuildFromLayout(newLayout);
       saveLayout(newLayout);
       setEditorTick((n) => n + 1);
     },
-    [getOfficeState, editorState, saveLayout],
+    [getArchiveEngine, editorState, saveLayout],
   );
 
   const handleFurnitureTypeChange = useCallback(
@@ -289,14 +289,14 @@ export function useEditorActions(
   const handleDeleteSelected = useCallback(() => {
     const uid = editorState.selectedFurnitureUid;
     if (!uid) return;
-    const os = getOfficeState();
-    const newLayout = removeFurniture(os.getLayout(), uid);
-    if (newLayout !== os.getLayout()) {
+    const engine = getArchiveEngine();
+    const newLayout = removeFurniture(engine.getLayout(), uid);
+    if (newLayout !== engine.getLayout()) {
       applyEdit(newLayout);
       editorState.clearSelection();
       colorEditUidRef.current = null;
     }
-  }, [getOfficeState, editorState, applyEdit]);
+  }, [getArchiveEngine, editorState, applyEdit]);
 
   const handleRotateSelected = useCallback(() => {
     // If in furniture placement mode, cycle the selected type through the rotation group
@@ -311,12 +311,12 @@ export function useEditorActions(
     // Otherwise rotate the selected placed furniture
     const uid = editorState.selectedFurnitureUid;
     if (!uid) return;
-    const os = getOfficeState();
-    const newLayout = rotateFurniture(os.getLayout(), uid, 'cw');
-    if (newLayout !== os.getLayout()) {
+    const engine = getArchiveEngine();
+    const newLayout = rotateFurniture(engine.getLayout(), uid, 'cw');
+    if (newLayout !== engine.getLayout()) {
       applyEdit(newLayout);
     }
-  }, [getOfficeState, editorState, applyEdit]);
+  }, [getArchiveEngine, editorState, applyEdit]);
 
   const handleToggleState = useCallback(() => {
     // If in furniture placement mode, toggle the selected type's state
@@ -331,38 +331,38 @@ export function useEditorActions(
     // Otherwise toggle the selected placed furniture's state
     const uid = editorState.selectedFurnitureUid;
     if (!uid) return;
-    const os = getOfficeState();
-    const newLayout = toggleFurnitureState(os.getLayout(), uid);
-    if (newLayout !== os.getLayout()) {
+    const engine = getArchiveEngine();
+    const newLayout = toggleFurnitureState(engine.getLayout(), uid);
+    if (newLayout !== engine.getLayout()) {
       applyEdit(newLayout);
     }
-  }, [getOfficeState, editorState, applyEdit]);
+  }, [getArchiveEngine, editorState, applyEdit]);
 
   const handleUndo = useCallback(() => {
     const prev = editorState.popUndo();
     if (!prev) return;
-    const os = getOfficeState();
+    const engine = getArchiveEngine();
     // Push current layout to redo stack before restoring
-    editorState.pushRedo(os.getLayout());
-    os.rebuildFromLayout(prev);
+    editorState.pushRedo(engine.getLayout());
+    engine.rebuildFromLayout(prev);
     saveLayout(prev);
     editorState.setDirty(true);
     setIsDirty(true);
     setEditorTick((n) => n + 1);
-  }, [getOfficeState, editorState, saveLayout]);
+  }, [getArchiveEngine, editorState, saveLayout]);
 
   const handleRedo = useCallback(() => {
     const next = editorState.popRedo();
     if (!next) return;
-    const os = getOfficeState();
+    const engine = getArchiveEngine();
     // Push current layout to undo stack before restoring
-    editorState.pushUndo(os.getLayout());
-    os.rebuildFromLayout(next);
+    editorState.pushUndo(engine.getLayout());
+    engine.rebuildFromLayout(next);
     saveLayout(next);
     editorState.setDirty(true);
     setIsDirty(true);
     setEditorTick((n) => n + 1);
-  }, [getOfficeState, editorState, saveLayout]);
+  }, [getArchiveEngine, editorState, saveLayout]);
 
   const handleReset = useCallback(() => {
     if (!lastSavedLayoutRef.current) return;
@@ -374,7 +374,7 @@ export function useEditorActions(
 
   const handleFactoryReset = useCallback(() => {
     if (window.confirm('Reset everything and reload default layout?')) {
-      localStorage.removeItem('office-layout');
+      localStorage.removeItem('archive-room-config');
       window.location.reload();
     }
   }, []);
@@ -385,13 +385,13 @@ export function useEditorActions(
       clearTimeout(saveTimerRef.current);
       saveTimerRef.current = null;
     }
-    const os = getOfficeState();
-    const layout = os.getLayout();
+    const engine = getArchiveEngine();
+    const layout = engine.getLayout();
     lastSavedLayoutRef.current = structuredClone(layout);
     vscode.postMessage({ type: 'saveLayout', layout });
     editorState.setDirty(false);
     setIsDirty(false);
-  }, [getOfficeState, editorState]);
+  }, [getArchiveEngine, editorState]);
 
   // Notify React that imperative editor selection changed (e.g., from OfficeCanvas mouseUp)
   const handleEditorSelectionChange = useCallback(() => {
@@ -405,14 +405,14 @@ export function useEditorActions(
 
   const handleDragMove = useCallback(
     (uid: string, newCol: number, newRow: number) => {
-      const os = getOfficeState();
-      const layout = os.getLayout();
+      const engine = getArchiveEngine();
+      const layout = engine.getLayout();
       const newLayout = moveFurniture(layout, uid, newCol, newRow);
       if (newLayout !== layout) {
         applyEdit(newLayout);
       }
     },
-    [getOfficeState, applyEdit],
+    [getArchiveEngine, applyEdit],
   );
 
   /**
@@ -421,11 +421,11 @@ export function useEditorActions(
    */
   const maybeExpand = useCallback(
     (
-      layout: OfficeLayout,
+      layout: ArchiveLayout,
       col: number,
       row: number,
     ): {
-      layout: OfficeLayout;
+      layout: ArchiveLayout;
       col: number;
       row: number;
       shift: { col: number; row: number };
@@ -462,8 +462,8 @@ export function useEditorActions(
 
   const handleEditorTileAction = useCallback(
     (col: number, row: number) => {
-      const os = getOfficeState();
-      let layout = os.getLayout();
+      const engine = getArchiveEngine();
+      let layout = engine.getLayout();
       let effectiveCol = col;
       let effectiveRow = row;
 
@@ -478,7 +478,7 @@ export function useEditorActions(
           effectiveCol = expansion.col;
           effectiveRow = expansion.row;
           // Rebuild from expanded layout first, shifting character positions
-          os.rebuildFromLayout(layout, expansion.shift);
+          engine.rebuildFromLayout(layout, expansion.shift);
         }
       }
 
@@ -661,13 +661,13 @@ export function useEditorActions(
         setEditorTick((n) => n + 1);
       }
     },
-    [getOfficeState, editorState, applyEdit, maybeExpand],
+    [getArchiveEngine, editorState, applyEdit, maybeExpand],
   );
 
   const handleEditorEraseAction = useCallback(
     (col: number, row: number) => {
-      const os = getOfficeState();
-      const layout = os.getLayout();
+      const engine = getArchiveEngine();
+      const layout = engine.getLayout();
       if (col < 0 || col >= layout.cols || row < 0 || row >= layout.rows) return;
 
       // LAYER 1: Check for furniture first (Eraser hits top layer)
@@ -699,7 +699,7 @@ export function useEditorActions(
         applyEdit(newLayout);
       }
     },
-    [getOfficeState, applyEdit],
+    [getArchiveEngine, applyEdit],
   );
 
 

@@ -345,7 +345,7 @@ export function dispatchMockMessages(): void {
   // Merge persistence metadata into existingAgents message
   const agents = [1]; // Primary agent
   const agentMeta: Record<number, any> = { 1: { palette: 0, hueShift: 0 } };
-  const folderNames: Record<number, string> = { 1: 'pixel-agents' };
+  const folderNames: Record<number, string> = { 1: 'archive-room' };
 
   for (const idStr of Object.keys(mockPayload.agentSeats)) {
     const id = parseInt(idStr);

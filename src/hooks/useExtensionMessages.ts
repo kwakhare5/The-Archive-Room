@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { playDoneSound, playPermissionSound, setSoundEnabled } from '../lib/engine/notificationSound';
-import type { OfficeState } from '../lib/engine/engine/officeState';
+import type { ArchiveEngine } from '../lib/engine/engine/ArchiveEngine';
 import { setFloorSprites } from '../lib/engine/floorTiles';
 import { buildDynamicCatalog } from '../lib/engine/layout/furnitureCatalog';
-import { migrateLayoutColors } from '../lib/engine/layout/layoutSerializer';
+import { deserializeArchive, migrateArchiveColors } from '../lib/engine/layout/nexusSerializer';
 import { setCharacterTemplates } from '../lib/engine/sprites/spriteData';
 import { extractToolName } from '../lib/engine/toolUtils';
-import type { OfficeLayout, ToolActivity } from '../lib/engine/types';
+import type { ArchiveLayout, ToolActivity } from '../lib/engine/types';
 import { setWallSprites } from '../lib/engine/wallTiles';
 import { vscode } from '../lib/engine/vscodeApi';
 
@@ -69,9 +69,9 @@ interface ExtensionMessageState {
   assetsLoaded: boolean;
 }
 
-function saveAgentSeats(os: OfficeState): void {
+function saveAgentSeats(engine: ArchiveEngine): void {
   const seats: Record<number, { palette: number; hueShift: number; seatId: string | null }> = {};
-  for (const ch of os.characters.values()) {
+  for (const ch of engine.characters.values()) {
     if (ch.isSubagent) continue;
     seats[ch.id] = { palette: ch.palette, hueShift: ch.hueShift, seatId: ch.seatId };
   }
@@ -79,8 +79,8 @@ function saveAgentSeats(os: OfficeState): void {
 }
 
 export function useExtensionMessages(
-  getOfficeState: () => OfficeState,
-  onLayoutLoaded?: (layout: OfficeLayout) => void,
+  getArchiveEngine: () => ArchiveEngine,
+  onLayoutLoaded?: (layout: ArchiveLayout) => void,
   isEditDirty?: () => boolean,
 ): ExtensionMessageState {
   const [agents, setAgents] = useState<number[]>([]);
@@ -148,7 +148,7 @@ export function useExtensionMessages(
 
     const handler = (e: MessageEvent) => {
       const msg = e.data;
-      const os = getOfficeState();
+      const engine = getArchiveEngine();
 
       if (msg.type === 'layoutLoaded') {
         // Skip external layout updates while editor has unsaved changes
@@ -156,18 +156,18 @@ export function useExtensionMessages(
           console.log('[Webview] Skipping external layout update — editor has unsaved changes');
           return;
         }
-        const rawLayout = msg.layout as OfficeLayout | null;
-        const layout = rawLayout && rawLayout.version === 1 ? migrateLayoutColors(rawLayout) : null;
+        const rawLayout = msg.layout as ArchiveLayout | null;
+        const layout = rawLayout && rawLayout.version === 1 ? migrateArchiveColors(rawLayout) : null;
         if (layout) {
-          os.rebuildFromLayout(layout);
+          engine.rebuildFromLayout(layout);
           onLayoutLoaded?.(layout);
         } else {
-          // Default layout — snapshot whatever OfficeState built
-          onLayoutLoaded?.(os.getLayout());
+          // Default layout — snapshot whatever ArchiveEngine built
+          onLayoutLoaded?.(engine.getLayout());
         }
         // Add buffered agents now that layout (and seats) are correct
         for (const p of pendingAgents) {
-          os.addAgent(p.id, p.palette, p.hueShift, p.seatId, true, p.folderName);
+          engine.addAgent(p.id, p.palette, p.hueShift, p.seatId, true, p.folderName);
         }
         pendingAgents = [];
         layoutReadyRef.current = true;
@@ -176,8 +176,8 @@ export function useExtensionMessages(
         if (msg.wasReset) {
           setLayoutWasReset(true);
         }
-        if (os.characters.size > 0) {
-          saveAgentSeats(os);
+        if (engine.characters.size > 0) {
+          saveAgentSeats(engine);
         }
       } else if (msg.type === 'agentCreated') {
         const id = msg.id as number;
@@ -194,21 +194,21 @@ export function useExtensionMessages(
         if (isTeammate && teammateParentId !== undefined) {
           // Teammate: inherit parent's palette and workspace folderName (teammate runs
           // in the same workspace as the lead). Name shown via agentName (teamRoleLabel).
-          const parentCh = os.characters.get(teammateParentId);
+          const parentCh = engine.characters.get(teammateParentId);
           const palette = parentCh ? parentCh.palette : undefined;
           const hueShift = parentCh ? parentCh.hueShift : undefined;
-          os.addAgent(id, palette, hueShift, undefined, undefined, parentCh?.folderName);
+          engine.addAgent(id, palette, hueShift, undefined, undefined, parentCh?.folderName);
           // Set team metadata on the character
-          const ch = os.characters.get(id);
+          const ch = engine.characters.get(id);
           if (ch) {
             ch.leadAgentId = teammateParentId;
             ch.teamName = teamName ?? parentCh?.teamName;
             ch.agentName = teammateName;
           }
         } else {
-          os.addAgent(id, undefined, undefined, undefined, undefined, folderName);
+          engine.addAgent(id, undefined, undefined, undefined, undefined, folderName);
         }
-        saveAgentSeats(os);
+        saveAgentSeats(engine);
       } else if (msg.type === 'agentClosed') {
         const id = msg.id as number;
         setAgents((prev) => prev.filter((a) => a !== id));
@@ -232,9 +232,9 @@ export function useExtensionMessages(
           return next;
         });
         // Remove all sub-agent characters belonging to this agent
-        os.removeAllSubagents(id);
+        engine.removeAllSubagents(id);
         setSubagentCharacters((prev) => prev.filter((s) => s.parentAgentId !== id));
-        os.removeAgent(id);
+        engine.removeAgent(id);
       } else if (msg.type === 'existingAgents') {
         const incoming = msg.agents as number[];
         const meta = (msg.agentMeta || {}) as Record<
@@ -280,11 +280,11 @@ export function useExtensionMessages(
           };
         });
         const toolName = (msg.toolName as string | undefined) ?? extractToolName(status);
-        os.setAgentTool(id, toolName);
-        os.setAgentActive(id, true);
+        engine.setAgentTool(id, toolName);
+        engine.setAgentActive(id, true);
         // Don't clear the permission bubble if the hook already confirmed permission is needed
         if (!permissionActive) {
-          os.clearPermissionBubble(id);
+          engine.clearPermissionBubble(id);
         }
         // Create sub-agent character for Task/Agent tool subtasks.
         // In tmux / inline teams mode, Agent tool has run_in_background=true -- those
@@ -302,7 +302,7 @@ export function useExtensionMessages(
           !toolId.startsWith('hook-')
         ) {
           const label = status.startsWith('Subtask:') ? status.slice('Subtask:'.length).trim() : '';
-          const subId = os.addSubagent(id, toolId);
+          const subId = engine.addSubagent(id, toolId);
           setSubagentCharacters((prev) => {
             if (prev.some((s) => s.id === subId)) return prev;
             return [...prev, { id: subId, parentAgentId: id, parentToolId: toolId, label }];
@@ -336,15 +336,15 @@ export function useExtensionMessages(
         // Remove all sub-agent characters belonging to this agent.
         // Exception: team leads with inline teammates -- their sub-agents represent
         // real teammates and should only be removed by SubagentStop/subagentClear.
-        const clearCh = os.characters.get(id);
+        const clearCh = engine.characters.get(id);
         const hasInlineTeammates =
           clearCh?.teamName && clearCh?.isTeamLead && !clearCh?.teamUsesTmux;
         if (!hasInlineTeammates) {
-          os.removeAllSubagents(id);
+          engine.removeAllSubagents(id);
           setSubagentCharacters((prev) => prev.filter((s) => s.parentAgentId !== id));
         }
-        os.setAgentTool(id, null);
-        os.clearPermissionBubble(id);
+        engine.setAgentTool(id, null);
+        engine.clearPermissionBubble(id);
       } else if (msg.type === 'agentSelected') {
         const id = msg.id as number;
         setSelectedAgent(id);
@@ -360,9 +360,9 @@ export function useExtensionMessages(
           }
           return { ...prev, [id]: status };
         });
-        os.setAgentActive(id, status === 'active');
+        engine.setAgentActive(id, status === 'active');
         if (status === 'waiting') {
-          os.showWaitingBubble(id);
+          engine.showWaitingBubble(id);
           playDoneSound();
         }
       } else if (msg.type === 'agentToolPermission') {
@@ -375,15 +375,15 @@ export function useExtensionMessages(
             [id]: list.map((t) => (t.done ? t : { ...t, permissionWait: true })),
           };
         });
-        os.showPermissionBubble(id);
+        engine.showPermissionBubble(id);
         playPermissionSound();
       } else if (msg.type === 'subagentToolPermission') {
         const id = msg.id as number;
         const parentToolId = msg.parentToolId as string;
         // Show permission bubble on the sub-agent character
-        const subId = os.getSubagentId(id, parentToolId);
+        const subId = engine.getSubagentId(id, parentToolId);
         if (subId !== null) {
-          os.showPermissionBubble(subId);
+          engine.showPermissionBubble(subId);
         }
       } else if (msg.type === 'agentToolPermissionClear') {
         const id = msg.id as number;
@@ -397,11 +397,11 @@ export function useExtensionMessages(
             [id]: list.map((t) => (t.permissionWait ? { ...t, permissionWait: false } : t)),
           };
         });
-        os.clearPermissionBubble(id);
+        engine.clearPermissionBubble(id);
         // Also clear permission bubbles on all sub-agent characters of this parent
-        for (const [subId, meta] of os.subagentMeta) {
+        for (const [subId, meta] of engine.subagentMeta) {
           if (meta.parentAgentId === id) {
-            os.clearPermissionBubble(subId);
+            engine.clearPermissionBubble(subId);
           }
         }
       } else if (msg.type === 'subagentToolStart') {
@@ -422,11 +422,11 @@ export function useExtensionMessages(
         // agentToolStart via PreToolUse). The lookup uses the REAL parent tool id from
         // JSONL, which won't match the synthetic hook-id the sub-agent was created
         // with -- so this is a best-effort update for the heuristic (JSONL-driven) path.
-        const subId = os.getSubagentId(id, parentToolId);
+        const subId = engine.getSubagentId(id, parentToolId);
         if (subId !== null) {
           const subToolName = extractToolName(status);
-          os.setAgentTool(subId, subToolName);
-          os.setAgentActive(subId, true);
+          engine.setAgentTool(subId, subToolName);
+          engine.setAgentActive(subId, true);
         }
       } else if (msg.type === 'subagentToolDone') {
         const id = msg.id as number;
@@ -461,7 +461,7 @@ export function useExtensionMessages(
           return { ...prev, [id]: next };
         });
         // Remove sub-agent character
-        os.removeSubagent(id, parentToolId);
+        engine.removeSubagent(id, parentToolId);
         setSubagentCharacters((prev) =>
           prev.filter((s) => !(s.parentAgentId === id && s.parentToolId === parentToolId)),
         );
@@ -533,7 +533,7 @@ export function useExtensionMessages(
         }
       } else if (msg.type === 'agentTeamInfo') {
         const id = msg.id as number;
-        os.setTeamInfo(
+        engine.setTeamInfo(
           id,
           msg.teamName as string | undefined,
           msg.agentName as string | undefined,
@@ -543,14 +543,14 @@ export function useExtensionMessages(
         );
       } else if (msg.type === 'agentTokenUsage') {
         const id = msg.id as number;
-        os.setAgentTokens(id, msg.inputTokens as number, msg.outputTokens as number);
+        engine.setAgentTokens(id, msg.inputTokens as number, msg.outputTokens as number);
       }
     };
     window.addEventListener('message', handler);
     vscode.postMessage({ type: 'webviewReady' });
     return () => window.removeEventListener('message', handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getOfficeState]);
+  }, [getArchiveEngine]);
 
   return {
     agents,

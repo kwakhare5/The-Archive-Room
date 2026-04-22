@@ -1,8 +1,8 @@
 import type { ColorValue } from '@/components/ui/types';
 import { DEFAULT_NEUTRAL_COLOR } from '@/lib/engine/constants';
 import { getCatalogEntry, getRotatedType, getToggledType } from '@/lib/engine/layout/furnitureCatalog';
-import { getPlacementBlockedTiles } from '@/lib/engine/layout/layoutSerializer';
-import type { OfficeLayout, PlacedFurniture, TileType as TileTypeVal } from '@/lib/engine/types';
+import { getPlacementBlockedTiles } from '@/lib/engine/layout/nexusSerializer';
+import type { ArchiveLayout, PlacedFurniture, TileType as TileTypeVal } from '@/lib/engine/types';
 import { MAX_COLS, MAX_ROWS, TileType } from '@/lib/engine/types';
 
 function isWallTile(tile: number): boolean {
@@ -20,12 +20,12 @@ function isWallTile(tile: number): boolean {
 
 /** Paint a single tile with pattern and color. Returns new layout (immutable). */
 export function paintTile(
-  layout: OfficeLayout,
+  layout: ArchiveLayout,
   col: number,
   row: number,
   tileType: TileTypeVal,
   color?: ColorValue,
-): OfficeLayout {
+): ArchiveLayout {
   const idx = row * layout.cols + col;
   if (idx < 0 || idx >= layout.tiles.length) return layout;
 
@@ -60,13 +60,13 @@ export function paintTile(
 }
 
 /** Place furniture. Returns new layout (immutable). */
-export function placeFurniture(layout: OfficeLayout, item: PlacedFurniture): OfficeLayout {
+export function placeFurniture(layout: ArchiveLayout, item: PlacedFurniture): ArchiveLayout {
   if (!canPlaceFurniture(layout, item.type, item.col, item.row)) return layout;
   return { ...layout, furniture: [...layout.furniture, item] };
 }
 
 /** Remove furniture by uid. Returns new layout (immutable). */
-export function removeFurniture(layout: OfficeLayout, uid: string): OfficeLayout {
+export function removeFurniture(layout: ArchiveLayout, uid: string): ArchiveLayout {
   const filtered = layout.furniture.filter((f) => f.uid !== uid);
   if (filtered.length === layout.furniture.length) return layout;
   return { ...layout, furniture: filtered };
@@ -74,11 +74,11 @@ export function removeFurniture(layout: OfficeLayout, uid: string): OfficeLayout
 
 /** Move furniture to new position. Returns new layout (immutable). */
 export function moveFurniture(
-  layout: OfficeLayout,
+  layout: ArchiveLayout,
   uid: string,
   newCol: number,
   newRow: number,
-): OfficeLayout {
+): ArchiveLayout {
   const item = layout.furniture.find((f) => f.uid === uid);
   if (!item) return layout;
   if (!canPlaceFurniture(layout, item.type, newCol, newRow, uid)) return layout;
@@ -92,10 +92,10 @@ export function moveFurniture(
 
 /** Rotate furniture to the next orientation. Returns new layout (immutable). */
 export function rotateFurniture(
-  layout: OfficeLayout,
+  layout: ArchiveLayout,
   uid: string,
   direction: 'cw' | 'ccw',
-): OfficeLayout {
+): ArchiveLayout {
   const item = layout.furniture.find((f) => f.uid === uid);
   if (!item) return layout;
   const newType = getRotatedType(item.type, direction);
@@ -107,7 +107,7 @@ export function rotateFurniture(
 }
 
 /** Toggle furniture state (on/off). Returns new layout (immutable). */
-export function toggleFurnitureState(layout: OfficeLayout, uid: string): OfficeLayout {
+export function toggleFurnitureState(layout: ArchiveLayout, uid: string): ArchiveLayout {
   const item = layout.furniture.find((f) => f.uid === uid);
   if (!item) return layout;
   const newType = getToggledType(item.type);
@@ -127,7 +127,7 @@ export function getWallPlacementRow(type: string, row: number): number {
 
 /** Check if furniture can be placed at (col, row) without overlapping. */
 export function canPlaceFurniture(
-  layout: OfficeLayout,
+  layout: ArchiveLayout,
   type: string, // FurnitureType enum or asset ID
   col: number,
   row: number,
@@ -218,9 +218,9 @@ export type ExpandDirection = 'left' | 'right' | 'up' | 'down';
  * Returns { layout, shift } or null if exceeding MAX_COLS/MAX_ROWS.
  */
 export function expandLayout(
-  layout: OfficeLayout,
+  layout: ArchiveLayout,
   direction: ExpandDirection,
-): { layout: OfficeLayout; shift: { col: number; row: number } } | null {
+): { layout: ArchiveLayout; shift: { col: number; row: number } } | null {
   const { cols, rows, tiles, furniture, tileColors } = layout;
   const existingColors = tileColors || new Array(tiles.length).fill(null);
 

@@ -1,2 +1,2 @@
-export { OfficeCanvas } from './OfficeCanvas';
+export { NexusCanvas } from './NexusCanvas';
 export { ToolOverlay } from './ToolOverlay';

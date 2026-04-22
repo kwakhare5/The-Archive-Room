@@ -1,9 +1,9 @@
-import RoomDashboard from '@/components/Room/RoomDashboard';
+import NexusDashboard from '@/components/Room/NexusDashboard';
 
 export default function Home() {
   return (
     <main className="min-h-screen">
-      <RoomDashboard />
+      <NexusDashboard />
     </main>
   );
 }

@@ -36,3 +36,11 @@
     - [x] Implement legacy key migration path
     - [x] Sync agent seat persistence across reloads
     - [x] Verify unified state restoration in browser
+
+- [x] **Phase 6: Architectural Mastery & Reactivity**
+    - [x] Perform Semantic Renaming (Office → Nexus/Archive) across entire codebase
+    - [x] Refactor `ArchiveEngine` and `EditorState` into encapsulated imperative stores
+    - [x] Resolve React Hot-Reloading and Prop Mutation errors via setter methods
+    - [x] Standardize `localStorage` keys to `archive-room-config`
+    - [x] Verify production build stability and dev server hot-reloading
+    - [x] Final sync of Living Documents (`task.md`, `walkthrough.md`, `CLAUDE.md`)

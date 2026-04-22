@@ -22,7 +22,7 @@
  *   { "event": "CONNECTION_READY",     "agents": [1, 2] }
  */
 
-import type { OfficeState } from './engine/engine/officeState';
+import type { ArchiveEngine } from './engine/engine/ArchiveEngine';
 
 /** Default WebSocket URL. Override via ?ws= query param or environment. */
 const DEFAULT_WS_URL = 'ws://localhost:8765';
@@ -50,7 +50,7 @@ export class PalaceEventBridge {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private isDestroyed = false;
   private readonly url: string;
-  private officeState: OfficeState | null = null;
+  private archiveEngine: ArchiveEngine | null = null;
   private reconnectDelay = 2000; // ms
 
   constructor(url?: string) {
@@ -63,9 +63,9 @@ export class PalaceEventBridge {
     this.url = url ?? wsOverride ?? DEFAULT_WS_URL;
   }
 
-  /** Connect to the backend WebSocket and bind to OfficeState. */
-  connect(officeState: OfficeState): void {
-    this.officeState = officeState;
+  /** Connect to the backend WebSocket and bind to ArchiveEngine. */
+  connect(archiveEngine: ArchiveEngine): void {
+    this.archiveEngine = archiveEngine;
     this.isDestroyed = false;
     this._connect();
   }
@@ -86,8 +86,8 @@ export class PalaceEventBridge {
       console.log('[PalaceEventBridge] Connected ✓');
       this.reconnectDelay = 2000; // reset backoff
       // Announce ready with current agent list
-      const agents = this.officeState
-        ? Array.from(this.officeState.characters.keys()).filter((id) => id >= 0)
+      const agents = this.archiveEngine
+        ? Array.from(this.archiveEngine.characters.keys()).filter((id) => id >= 0)
         : [];
       this._send({ event: 'CONNECTION_READY', agents });
     };
@@ -126,8 +126,8 @@ export class PalaceEventBridge {
   }
 
   private _handleCommand(msg: any): void {
-    const os = this.officeState;
-    if (!os) return;
+    const engine = this.archiveEngine;
+    if (!engine) return;
 
     // Handle both wrapped and unwrapped commands
     const data = msg.type === 'AGENT_COMMAND' ? msg : msg;
@@ -141,13 +141,13 @@ export class PalaceEventBridge {
     switch (command) {
       case 'SPAWN_AGENT': {
         if (agentId === undefined) break;
-        os.addAgent(agentId);
+        engine.addAgent(agentId);
         break;
       }
 
       case 'REMOVE_AGENT': {
         if (agentId === undefined) break;
-        os.removeAgent(agentId);
+        engine.removeAgent(agentId);
         break;
       }
 
@@ -159,11 +159,11 @@ export class PalaceEventBridge {
       case 'WRITE_RESPONSE':
       case 'WAIT': {
         if (agentId === undefined) break;
-        const result = os.executeCommand(agentId, command, target);
+        const result = engine.executeCommand(agentId, command, target);
         if (result.success) {
           // Apply thought bubble if provided
           if (thought) {
-            const ch = os.characters.get(agentId);
+            const ch = engine.characters.get(agentId);
             if (ch) {
               ch.bubbleText = thought;
               // Ensure bubbleType is set correctly based on command if it wasn't already
