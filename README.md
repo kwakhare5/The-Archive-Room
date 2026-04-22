@@ -3,7 +3,7 @@
 # 🏛️ THE ARCHIVE ROOM
 ### **The Autonomous Data Nexus & AI Memory Palace**
 
-![The Archive Room Hero](archive_room_hero_mockup.png)
+![The Archive Room Hero](_legacy_archive/documentation/archive_room_hero_mockup.png)
 
 **Transforming raw AI logic into a high-fidelity, interactive spatial simulation.**
 

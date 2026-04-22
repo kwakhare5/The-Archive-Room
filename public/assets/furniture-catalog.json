@@ -24,8 +24,8 @@
     "height": 16,
     "footprintW": 2,
     "footprintH": 1,
-    "isDesk": false,
-    "canPlaceOnWalls": false
+    "isDesk": true,
+    "canPlaceOnWalls": true
   },
   {
     "id": "CACTUS",
@@ -82,7 +82,7 @@
     "height": 32,
     "footprintW": 2,
     "footprintH": 2,
-    "isDesk": false,
+    "isDesk": true,
     "canPlaceOnWalls": false
   },
   {
@@ -162,7 +162,7 @@
     "height": 32,
     "footprintW": 3,
     "footprintH": 2,
-    "isDesk": false,
+    "isDesk": true,
     "canPlaceOnWalls": false,
     "backgroundTiles": 1,
     "orientation": "front",
@@ -180,7 +180,7 @@
     "height": 64,
     "footprintW": 1,
     "footprintH": 4,
-    "isDesk": false,
+    "isDesk": true,
     "canPlaceOnWalls": false,
     "backgroundTiles": 1,
     "orientation": "side",
@@ -198,8 +198,8 @@
     "height": 32,
     "footprintW": 2,
     "footprintH": 2,
-    "isDesk": false,
-    "canPlaceOnWalls": false
+    "isDesk": true,
+    "canPlaceOnWalls": true
   },
   {
     "id": "HANGING_PLANT",
@@ -255,7 +255,7 @@
     "width": 16,
     "height": 32,
     "footprintW": 1,
-    "footprintH": 2,
+    "footprintH": 1,
     "isDesk": false,
     "canPlaceOnWalls": false,
     "canPlaceOnSurfaces": true,
@@ -275,7 +275,7 @@
     "width": 16,
     "height": 32,
     "footprintW": 1,
-    "footprintH": 2,
+    "footprintH": 1,
     "isDesk": false,
     "canPlaceOnWalls": false,
     "canPlaceOnSurfaces": true,
@@ -295,7 +295,7 @@
     "width": 16,
     "height": 32,
     "footprintW": 1,
-    "footprintH": 2,
+    "footprintH": 1,
     "isDesk": false,
     "canPlaceOnWalls": false,
     "canPlaceOnSurfaces": true,
@@ -315,7 +315,7 @@
     "width": 16,
     "height": 32,
     "footprintW": 1,
-    "footprintH": 2,
+    "footprintH": 1,
     "isDesk": false,
     "canPlaceOnWalls": false,
     "canPlaceOnSurfaces": true,
@@ -335,7 +335,7 @@
     "width": 16,
     "height": 32,
     "footprintW": 1,
-    "footprintH": 2,
+    "footprintH": 1,
     "isDesk": false,
     "canPlaceOnWalls": false,
     "canPlaceOnSurfaces": true,
@@ -354,7 +354,7 @@
     "width": 16,
     "height": 32,
     "footprintW": 1,
-    "footprintH": 2,
+    "footprintH": 1,
     "isDesk": false,
     "canPlaceOnWalls": false,
     "canPlaceOnSurfaces": true,
@@ -377,7 +377,8 @@
     "footprintH": 2,
     "isDesk": false,
     "canPlaceOnWalls": false,
-    "backgroundTiles": 1
+    "backgroundTiles": 1,
+    "canPlaceOnSurfaces": true
   },
   {
     "id": "PLANT_2",
@@ -392,7 +393,8 @@
     "footprintH": 2,
     "isDesk": false,
     "canPlaceOnWalls": false,
-    "backgroundTiles": 1
+    "backgroundTiles": 1,
+    "canPlaceOnSurfaces": true
   },
   {
     "id": "POT",
@@ -406,7 +408,8 @@
     "footprintW": 1,
     "footprintH": 1,
     "isDesk": false,
-    "canPlaceOnWalls": false
+    "canPlaceOnWalls": false,
+    "canPlaceOnSurfaces": true
   },
   {
     "id": "SMALL_PAINTING",
@@ -447,7 +450,7 @@
     "height": 32,
     "footprintW": 2,
     "footprintH": 2,
-    "isDesk": false,
+    "isDesk": true,
     "canPlaceOnWalls": false,
     "backgroundTiles": 1,
     "orientation": "front",
@@ -465,7 +468,7 @@
     "height": 48,
     "footprintW": 1,
     "footprintH": 3,
-    "isDesk": false,
+    "isDesk": true,
     "canPlaceOnWalls": false,
     "backgroundTiles": 1,
     "orientation": "side",
@@ -535,7 +538,7 @@
     "height": 64,
     "footprintW": 3,
     "footprintH": 4,
-    "isDesk": false,
+    "isDesk": true,
     "canPlaceOnWalls": false,
     "backgroundTiles": 1
   },

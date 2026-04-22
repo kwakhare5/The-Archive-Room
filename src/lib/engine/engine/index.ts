@@ -3,11 +3,11 @@ export {
   getCharacterSprite,
   isReadingTool,
   updateCharacter,
-} from './characters.js';
-export type { GameLoopCallbacks } from './gameLoop.js';
-export { startGameLoop } from './gameLoop.js';
-export { OfficeState } from './officeState.js';
-export type { DeleteButtonBounds, EditorRenderState, SelectionRenderState } from './renderer.js';
+} from './characters';
+export type { GameLoopCallbacks } from './gameLoop';
+export { startGameLoop } from './gameLoop';
+export { OfficeState } from './officeState';
+export type { DeleteButtonBounds, EditorRenderState, SelectionRenderState } from './renderer';
 export {
   renderDeleteButton,
   renderFrame,
@@ -16,4 +16,4 @@ export {
   renderScene,
   renderSelectionHighlight,
   renderTileGrid,
-} from './renderer.js';
+} from './renderer';

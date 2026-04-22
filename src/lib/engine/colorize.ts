@@ -6,8 +6,8 @@
  * - Adjust (default for furniture): shift original pixel HSL values.
  */
 
-import type { ColorValue } from '../components/ui/types.js';
-import type { SpriteData } from './types.js';
+import type { ColorValue } from '@/components/ui/types';
+import type { SpriteData } from './types';
 
 /** Generic colorized sprite cache: arbitrary string key → SpriteData */
 const colorizeCache = new Map<string, SpriteData>();
@@ -221,3 +221,13 @@ export function adjustSprite(sprite: SpriteData, color: ColorValue): SpriteData 
 
   return result;
 }
+
+/** Convert [r, g, b, a] array to #RRGGBBAA hex string (Legacy Asset Helper) */
+export function rgbaToHex(r: number, g: number, b: number, a: number): string {
+  const hexR = r.toString(16).padStart(2, '0');
+  const hexG = g.toString(16).padStart(2, '0');
+  const hexB = b.toString(16).padStart(2, '0');
+  const hexA = a.toString(16).padStart(2, '0');
+  return `#${hexR}${hexG}${hexB}${hexA}`.toUpperCase();
+}
+

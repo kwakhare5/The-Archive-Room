@@ -4,6 +4,6 @@ export {
   paintTile,
   placeFurniture,
   removeFurniture,
-} from './editorActions.js';
-export { EditorState } from './editorState.js';
-export { EditorToolbar } from './EditorToolbar.js';
+} from './editorActions';
+export { EditorState } from './editorState';
+export { EditorToolbar } from './EditorToolbar';

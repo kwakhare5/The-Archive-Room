@@ -13,9 +13,9 @@ import {
   matrixGreenBright,
   matrixGreenDim,
   matrixGreenMid,
-} from '../../constants.js';
-import type { Character, SpriteData } from '../types.js';
-import { MATRIX_EFFECT_DURATION } from '../types.js';
+} from '@/lib/engine/constants';
+import type { Character, SpriteData } from '@/lib/engine/types';
+import { MATRIX_EFFECT_DURATION } from '@/lib/engine/types';
 
 /** Hash-based flicker: ~70% visible for shimmer effect */
 function flickerVisible(col: number, row: number, time: number): boolean {

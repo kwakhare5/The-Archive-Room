@@ -1,9 +1,9 @@
-import type { ColorValue } from '../../components/ui/types.js';
-import { DEFAULT_NEUTRAL_COLOR } from '../../constants.js';
-import { getCatalogEntry, getRotatedType, getToggledType } from '../layout/furnitureCatalog.js';
-import { getPlacementBlockedTiles } from '../layout/layoutSerializer.js';
-import type { OfficeLayout, PlacedFurniture, TileType as TileTypeVal } from '../types.js';
-import { MAX_COLS, MAX_ROWS, TileType } from '../types.js';
+import type { ColorValue } from '@/components/ui/types';
+import { DEFAULT_NEUTRAL_COLOR } from '@/lib/engine/constants';
+import { getCatalogEntry, getRotatedType, getToggledType } from '@/lib/engine/layout/furnitureCatalog';
+import { getPlacementBlockedTiles } from '@/lib/engine/layout/layoutSerializer';
+import type { OfficeLayout, PlacedFurniture, TileType as TileTypeVal } from '@/lib/engine/types';
+import { MAX_COLS, MAX_ROWS, TileType } from '@/lib/engine/types';
 
 function isWallTile(tile: number): boolean {
   return tile === TileType.WALL || 

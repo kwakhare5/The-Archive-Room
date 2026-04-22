@@ -1,3 +1,4 @@
+"use no memo";
 import { useCallback, useEffect, useRef } from 'react';
 
 import {
@@ -7,23 +8,24 @@ import {
   ZOOM_MAX,
   ZOOM_MIN,
   ZOOM_SCROLL_THRESHOLD,
-} from '../constants';
+} from '@/lib/engine/constants';
 import { unlockAudio } from '../notificationSound';
-import { vscode } from '../vscodeApi';
+import { vscode } from '@/lib/engine/vscodeApi';
 import { canPlaceFurniture, getWallPlacementRow } from '../editor/editorActions';
 import type { EditorState } from '../editor/editorState';
-import { startGameLoop } from '../engine/gameLoop';
-import type { OfficeState } from '../engine/officeState';
+import { startGameLoop } from '@/lib/engine/engine/gameLoop';
+import type { OfficeState } from '@/lib/engine/engine/officeState';
 import type {
   DeleteButtonBounds,
   EditorRenderState,
   RotateButtonBounds,
   SelectionRenderState,
-} from '../engine/renderer';
-import { renderFrame } from '../engine/renderer';
+} from '@/lib/engine/engine/renderer';
+import { renderFrame } from '@/lib/engine/engine/renderer';
 import { hasFloorSprites } from '../floorTiles';
-import { getCatalogEntry, isCatalogReady, isRotatable } from '../layout/furnitureCatalog';
-import { EditTool, TILE_SIZE } from '../types';
+import { getCatalogEntry, isCatalogReady, isRotatable } from '@/lib/engine/layout/furnitureCatalog';
+import { getDPR } from '@/lib/engine/toolUtils';
+import { EditTool, TILE_SIZE } from '@/lib/engine/types';
 import { hasWallSprites } from '../wallTiles';
 
 interface OfficeCanvasProps {
@@ -101,7 +103,7 @@ export function OfficeCanvas({
     const container = containerRef.current;
     if (!canvas || !container) return;
     const rect = container.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = getDPR();
     canvas.width = Math.round(rect.width * dpr);
     canvas.height = Math.round(rect.height * dpr);
     canvas.style.width = `${rect.width}px`;
@@ -272,6 +274,7 @@ export function OfficeCanvas({
           officeState.getLayout().tileColors,
           officeState.getLayout().cols,
           officeState.getLayout().rows,
+          officeState.getLayout().furniture,
         );
         offsetRef.current = { x: offsetX, y: offsetY };
 
@@ -293,7 +296,7 @@ export function OfficeCanvas({
       const canvas = canvasRef.current;
       if (!canvas) return null;
       const rect = canvas.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = getDPR();
       // CSS coords relative to canvas
       const cssX = clientX - rect.left;
       const cssY = clientY - rect.top;
@@ -353,7 +356,7 @@ export function OfficeCanvas({
     (e: React.MouseEvent) => {
       // Handle middle-mouse panning
       if (isPanningRef.current) {
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = getDPR();
         const dx = (e.clientX - panStartRef.current.mouseX) * dpr;
         const dy = (e.clientY - panStartRef.current.mouseY) * dpr;
         panRef.current = clampPan(panStartRef.current.panX + dx, panStartRef.current.panY + dy);
@@ -780,7 +783,7 @@ export function OfficeCanvas({
         }
       } else {
         // Pan via trackpad two-finger scroll or mouse wheel
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = getDPR();
         officeState.cameraFollowId = null;
         panRef.current = clampPan(
           panRef.current.x - e.deltaX * dpr,

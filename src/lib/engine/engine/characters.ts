@@ -2,12 +2,12 @@ import {
   TYPE_FRAME_DURATION_SEC,
   WALK_FRAME_DURATION_SEC,
   WALK_SPEED_PX_PER_SEC,
-} from '../../constants.js';
-import { findPath } from '../layout/tileMap.js';
-import type { CharacterSprites } from '../sprites/spriteData.js';
-import type { Character, Seat, SpriteData, TileType as TileTypeVal } from '../types.js';
-import { CharacterState, Direction, TILE_SIZE } from '../types.js';
-import { palaceBridge } from '../../PalaceEventBridge.js';
+} from '@/lib/engine/constants';
+import { findPath } from '@/lib/engine/layout/tileMap';
+import type { CharacterSprites } from '@/lib/engine/sprites/spriteData';
+import type { Character, Seat, SpriteData, TileType as TileTypeVal } from '@/lib/engine/types';
+import { CharacterState, Direction, TILE_SIZE } from '@/lib/engine/types';
+import { palaceBridge } from '@/lib/bridge';
 
 /** Tools that show reading animation instead of typing */
 const READING_TOOLS = new Set(['Read', 'Grep', 'Glob', 'WebFetch', 'WebSearch']);
@@ -68,6 +68,7 @@ export function createCharacter(
     frameTimer: 0,
     isActive: true,
     seatId,
+    isSeated: !!seat,
     activeCommand: null,
     targetFurnitureUid: null,
     interactionTimer: 0,

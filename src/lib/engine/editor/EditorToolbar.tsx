@@ -1,27 +1,27 @@
 import { useEffect, useState } from 'react';
 
-import { Button } from '../../components/ui/Button.js';
-import { ColorPicker } from '../../components/ui/ColorPicker.js';
-import { ItemSelect } from '../../components/ui/ItemSelect.js';
-import type { ColorValue } from '../../components/ui/types.js';
+import { Button } from '@/components/ui/Button';
+import { ColorPicker } from '@/components/ui/ColorPicker';
+import { ItemSelect } from '@/components/ui/ItemSelect';
+import type { ColorValue } from '@/components/ui/types';
 import { 
   CANVAS_FALLBACK_TILE_COLOR, 
   MODULAR_WHITE, 
   MODULAR_GRAY, 
   MODULAR_SHADOW, 
   MODULAR_BORDER 
-} from '../../constants.js';
+} from '@/lib/engine/constants';
 
-import { getColorizedFloorSprite, getFloorPatternCount, hasFloorSprites } from '../floorTiles.js';
-import type { FurnitureCategory, LoadedAssetData } from '../layout/furnitureCatalog.js';
+import { getColorizedFloorSprite, getFloorPatternCount, hasFloorSprites } from '../floorTiles';
+import type { FurnitureCategory, LoadedAssetData } from '@/lib/engine/layout/furnitureCatalog';
 import {
   buildDynamicCatalog,
   getActiveCategories,
   getCatalogByCategory,
-} from '../layout/furnitureCatalog.js';
-import { getCachedSprite } from '../sprites/spriteCache.js';
-import { EditTool, TileType } from '../types.js';
-import type { TileType as TileTypeVal } from '../types.js';
+} from '@/lib/engine/layout/furnitureCatalog';
+import { getCachedSprite } from '@/lib/engine/sprites/spriteCache';
+import { EditTool, TileType } from '@/lib/engine/types';
+import type { TileType as TileTypeVal } from '@/lib/engine/types';
 
 
 interface EditorToolbarProps {
@@ -44,6 +44,8 @@ interface EditorToolbarProps {
   onRedo: () => void;
   onFactoryReset: () => void;
   onSave: () => void;
+  onToggleLock: () => void;
+  isLocked: boolean;
   loadedAssets?: LoadedAssetData;
 }
 
@@ -68,6 +70,8 @@ export function EditorToolbar({
   onRedo,
   onFactoryReset,
   onSave,
+  onToggleLock,
+  isLocked,
   loadedAssets,
 }: EditorToolbarProps) {
   const [activeCategory, setActiveCategory] = useState<FurnitureCategory>('desks');
@@ -78,10 +82,10 @@ export function EditorToolbar({
 
   // Update lastMainTool whenever a main tool is selected
   useEffect(() => {
-    if (activeTool !== EditTool.EYEDROPPER) {
+    if (activeTool !== EditTool.EYEDROPPER && activeTool !== lastMainTool) {
       setLastMainTool(activeTool);
     }
-  }, [activeTool]);
+  }, [activeTool, lastMainTool]);
 
   // Build dynamic catalog from loaded assets
   useEffect(() => {
@@ -91,7 +95,7 @@ export function EditorToolbar({
         const activeCategories = getActiveCategories();
         if (activeCategories.length > 0) {
           const firstCat = activeCategories[0]?.id;
-          if (firstCat) {
+          if (firstCat && activeCategory !== firstCat) {
             setActiveCategory(firstCat);
           }
         }
@@ -627,6 +631,16 @@ export function EditorToolbar({
             onClick={onFactoryReset}
           >
             Factory Reset
+          </button>
+          <button
+            className={`flex-1 px-3 py-2 text-xs font-medium border rounded transition-all duration-300 ${
+              isLocked 
+                ? 'border-indigo-500/50 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30' 
+                : 'border-slate-500/30 hover:bg-slate-700/30 text-slate-400'
+            }`}
+            onClick={onToggleLock}
+          >
+            {isLocked ? '🔓 Unlock' : '🔒 Lock Layout'}
           </button>
           <button
             className={`flex-1 px-3 py-2 text-xs font-medium rounded transition-all duration-300 ${

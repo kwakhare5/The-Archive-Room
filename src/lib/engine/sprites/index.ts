@@ -1,3 +1,3 @@
-export { getCachedSprite, getOutlineSprite } from './spriteCache.js';
-export type { CharacterSprites } from './spriteData.js';
-export { getCharacterSprites } from './spriteData.js';
+export { getCachedSprite, getOutlineSprite } from './spriteCache';
+export type { CharacterSprites } from './spriteData';
+export { getCharacterSprites } from './spriteData';

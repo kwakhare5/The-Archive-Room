@@ -11,7 +11,7 @@ import {
   PERMISSION_NOTE_2_START_SEC,
   PERMISSION_NOTE_DURATION_SEC,
   PERMISSION_VOLUME,
-} from './constants.js';
+} from './constants';
 
 let soundEnabled = true;
 let audioCtx: AudioContext | null = null;

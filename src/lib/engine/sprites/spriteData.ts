@@ -1,8 +1,8 @@
-import type { ColorValue } from '../../components/ui/types.js';
-import { PALETTE_COUNT } from '../../constants.js';
-import { adjustSprite } from '../colorize.js';
-import type { Direction, SpriteData } from '../types.js';
-import { Direction as Dir } from '../types.js';
+import type { ColorValue } from '@/components/ui/types';
+import { PALETTE_COUNT } from '@/lib/engine/constants';
+import { adjustSprite } from '../colorize';
+import type { Direction, SpriteData } from '@/lib/engine/types';
+import { Direction as Dir } from '@/lib/engine/types';
 import bubblePermissionData from './bubble-permission.json';
 import bubbleWaitingData from './bubble-waiting.json';
 
@@ -22,6 +22,13 @@ export const BUBBLE_PERMISSION_SPRITE: SpriteData = resolveBubbleSprite(bubblePe
 
 /** Waiting bubble: white square with green checkmark, and a tail pointer (11x13) */
 export const BUBBLE_WAITING_SPRITE: SpriteData = resolveBubbleSprite(bubbleWaitingData);
+
+/** Thinking bubble: simple bubble with "..." (reusing permission for now) */
+export const BUBBLE_THINKING_SPRITE: SpriteData = BUBBLE_PERMISSION_SPRITE;
+/** Reading bubble: simple bubble with checkmark (reusing waiting for now) */
+export const BUBBLE_READING_SPRITE: SpriteData = BUBBLE_WAITING_SPRITE;
+/** Typing bubble: simple bubble with "..." (reusing permission for now) */
+export const BUBBLE_TYPING_SPRITE: SpriteData = BUBBLE_PERMISSION_SPRITE;
 
 // ════════════════════════════════════════════════════════════════
 // Loaded character sprites (from PNG assets)

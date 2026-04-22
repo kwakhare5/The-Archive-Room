@@ -8,7 +8,7 @@
  * Only imported in browser runtime; tree-shaken from VS Code webview runtime.
  */
 
-import { rgbaToHex } from '../../shared/assets/colorUtils.ts';
+import { rgbaToHex } from './colorize';
 import {
   CHAR_FRAME_H,
   CHAR_FRAME_W,
@@ -19,25 +19,27 @@ import {
   WALL_GRID_COLS,
   WALL_PIECE_HEIGHT,
   WALL_PIECE_WIDTH,
-} from '../../shared/assets/constants.ts';
+} from './constants';
 import type {
   AssetIndex,
-  CatalogEntry,
+  LegacyCatalogEntry,
   CharacterDirectionSprites,
-} from '../../shared/assets/types.ts';
+} from './types';
 
 interface MockPayload {
   characters: CharacterDirectionSprites[];
   floorSprites: string[][][];
   wallSets: string[][][][];
-  furnitureCatalog: CatalogEntry[];
+  furnitureCatalog: LegacyCatalogEntry[];
   furnitureSprites: Record<string, string[][]>;
   layout: unknown;
   settings: {
     soundEnabled: boolean;
     alwaysShowLabels: boolean;
     watchAllSessions: boolean;
+    hooksEnabled: boolean;
   };
+  agentSeats: Record<number, any>;
 }
 
 // ── Module-level state ─────────────────────────────────────────────────────────
@@ -166,7 +168,7 @@ async function decodeWallsFromPng(base: string, index: AssetIndex): Promise<stri
 
 async function decodeFurnitureFromPng(
   base: string,
-  catalog: CatalogEntry[],
+  catalog: LegacyCatalogEntry[],
 ): Promise<Record<string, string[][]>> {
   const sprites: Record<string, string[][]> = {};
   for (const entry of catalog) {
@@ -186,14 +188,14 @@ async function decodeFurnitureFromPng(
 export async function initBrowserMock(): Promise<void> {
   console.log('[BrowserMock] Loading assets...');
 
-  const base = import.meta.env.BASE_URL; // '/' in dev, '/sub/' with a subpath, './' in production
+  const base = '/'; // '/' in dev, '/sub/' with a subpath, './' in production
 
   const [assetIndex, catalog] = await Promise.all([
     fetch(`${base}assets/asset-index.json`).then((r) => r.json()) as Promise<AssetIndex>,
-    fetch(`${base}assets/furniture-catalog.json`).then((r) => r.json()) as Promise<CatalogEntry[]>,
+    fetch(`${base}assets/furniture-catalog.json`).then((r) => r.json()) as Promise<LegacyCatalogEntry[]>,
   ]);
 
-  const shouldTryDecoded = import.meta.env.DEV;
+  const shouldTryDecoded = process.env.NODE_ENV === 'development';
   const [decodedCharacters, decodedFloors, decodedWalls, decodedFurniture] = shouldTryDecoded
     ? await Promise.all([
         fetchJsonOptional<CharacterDirectionSprites[]>(`${base}assets/decoded/characters.json`),
@@ -222,25 +224,71 @@ export async function initBrowserMock(): Promise<void> {
         decodeFurnitureFromPng(base, catalog),
       ]);
 
-  const savedLayoutRaw = localStorage.getItem('office-layout');
-  const savedLayout = savedLayoutRaw ? JSON.parse(savedLayoutRaw) : null;
-  const redesignApplied = localStorage.getItem('redesign-v2-applied');
-  
-  let layout = savedLayout;
+  const CONFIG_KEY = 'archive-room-config';
+  const rawConfig = localStorage.getItem(CONFIG_KEY);
+  let config = rawConfig ? JSON.parse(rawConfig) : null;
 
-  // One-time force-load of the redesign
-  if (!redesignApplied && assetIndex.defaultLayout) {
-    layout = await fetch(`${base}assets/${assetIndex.defaultLayout}`).then((r) => r.json());
-    localStorage.setItem('redesign-v2-applied', 'true');
-    // Also save it to the main slot so it persists if they don't click save
-    localStorage.setItem('office-layout', JSON.stringify(layout));
-  } else if (!layout && assetIndex.defaultLayout) {
-    layout = await fetch(`${base}assets/${assetIndex.defaultLayout}`).then((r) => r.json());
+  // Migration logic
+  if (!config) {
+    console.log('[BrowserMock] New config not found, attempting migration from legacy keys...');
+    const legacyLayout = localStorage.getItem('office-layout');
+    const legacySound = localStorage.getItem('office-sound-enabled');
+    const legacyLabels = localStorage.getItem('office-always-show-labels');
+    const legacyWatch = localStorage.getItem('office-watch-all-sessions');
+    const legacyState = localStorage.getItem('vscode-state');
+
+    if (legacyLayout || legacySound || legacyLabels || legacyWatch || legacyState) {
+      config = {
+        layout: legacyLayout ? JSON.parse(legacyLayout) : null,
+        agentSeats: {},
+        settings: {
+          soundEnabled: legacySound ? JSON.parse(legacySound) : false,
+          alwaysShowLabels: legacyLabels ? JSON.parse(legacyLabels) : false,
+          watchAllSessions: legacyWatch ? JSON.parse(legacyWatch) : false,
+          hooksEnabled: true,
+        },
+        vscodeState: legacyState ? JSON.parse(legacyState) : {},
+      };
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+      console.log('[BrowserMock] Migration complete.');
+      
+      // Cleanup legacy keys
+      localStorage.removeItem('office-layout');
+      localStorage.removeItem('office-sound-enabled');
+      localStorage.removeItem('office-always-show-labels');
+      localStorage.removeItem('office-watch-all-sessions');
+      localStorage.removeItem('vscode-state');
+    }
   }
 
-  const soundEnabled = JSON.parse(localStorage.getItem('office-sound-enabled') || 'false');
-  const alwaysShowLabels = JSON.parse(localStorage.getItem('office-always-show-labels') || 'false');
-  const watchAllSessions = JSON.parse(localStorage.getItem('office-watch-all-sessions') || 'false');
+  let layout = config?.layout;
+
+  if (assetIndex.defaultLayout) {
+    const fileLayout = await fetch(`${base}assets/${assetIndex.defaultLayout}?t=${Date.now()}`).then((r) => r.json());
+    const fileRev = fileLayout.layoutRevision || 0;
+
+    // Force update ONLY if no saved layout exists in config
+    if (!layout) {
+      console.log(`[BrowserMock] Initializing default layout (v${fileRev})`);
+      layout = fileLayout;
+      const updatedConfig = config || {
+        layout: null,
+        agentSeats: {},
+        settings: { soundEnabled: false, alwaysShowLabels: false, watchAllSessions: false, hooksEnabled: true },
+        vscodeState: {}
+      };
+      updatedConfig.layout = layout;
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(updatedConfig));
+      config = updatedConfig;
+    }
+  }
+
+  const settings = config?.settings || {
+    soundEnabled: false,
+    alwaysShowLabels: false,
+    watchAllSessions: false,
+    hooksEnabled: true,
+  };
 
   mockPayload = {
     characters,
@@ -249,11 +297,8 @@ export async function initBrowserMock(): Promise<void> {
     furnitureCatalog: catalog,
     furnitureSprites,
     layout,
-    settings: {
-      soundEnabled,
-      alwaysShowLabels,
-      watchAllSessions,
-    },
+    settings,
+    agentSeats: config?.agentSeats || {},
   };
 
   console.log(
@@ -281,30 +326,41 @@ export function dispatchMockMessages(): void {
   function dispatch(data: unknown): void {
     window.dispatchEvent(new MessageEvent('message', { data }));
   }
-
-  // characterSpritesLoaded → floorTilesLoaded → wallTilesLoaded → furnitureAssetsLoaded → layoutLoaded
-  dispatch({ type: 'characterSpritesLoaded', characters });
-  dispatch({ type: 'floorTilesLoaded', sprites: floorSprites });
-  dispatch({ type: 'wallTilesLoaded', sets: wallSets });
-  dispatch({ type: 'furnitureAssetsLoaded', catalog: furnitureCatalog, sprites: furnitureSprites });
-  // SPAWN MOCK AGENT (Fix for missing agents in browser)
-  dispatch({ 
-    type: 'existingAgents', 
-    agents: [1], 
-    agentMeta: { 1: { palette: 0, hueShift: 0 } },
-    folderNames: { 1: 'pixel-agents' }
-  });
-
-  dispatch({ type: 'layoutLoaded', layout });
-
   dispatch({
     type: 'settingsLoaded',
     soundEnabled: settings.soundEnabled,
     alwaysShowLabels: settings.alwaysShowLabels,
     watchAllSessions: settings.watchAllSessions,
+    hooksEnabled: settings.hooksEnabled,
     extensionVersion: '1.3.0',
     lastSeenVersion: '1.2',
   });
+
+  // characterSpritesLoaded → floorTilesLoaded → wallTilesLoaded → furnitureAssetsLoaded → existingAgents → layoutLoaded
+  dispatch({ type: 'characterSpritesLoaded', characters });
+  dispatch({ type: 'floorTilesLoaded', sprites: floorSprites });
+  dispatch({ type: 'wallTilesLoaded', sets: wallSets });
+  dispatch({ type: 'furnitureAssetsLoaded', catalog: furnitureCatalog, sprites: furnitureSprites });
+  
+  // Merge persistence metadata into existingAgents message
+  const agents = [1]; // Primary agent
+  const agentMeta: Record<number, any> = { 1: { palette: 0, hueShift: 0 } };
+  const folderNames: Record<number, string> = { 1: 'pixel-agents' };
+
+  for (const idStr of Object.keys(mockPayload.agentSeats)) {
+    const id = parseInt(idStr);
+    if (!agents.includes(id)) agents.push(id);
+    agentMeta[id] = mockPayload.agentSeats[id];
+  }
+
+  dispatch({ 
+    type: 'existingAgents', 
+    agents, 
+    agentMeta,
+    folderNames
+  });
+
+  dispatch({ type: 'layoutLoaded', layout });
 
   console.log('[BrowserMock] Messages dispatched');
 }

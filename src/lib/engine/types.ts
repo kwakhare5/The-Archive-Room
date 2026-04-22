@@ -5,7 +5,7 @@ export {
   MAX_COLS,
   MAX_ROWS,
   TILE_SIZE,
-} from '../constants.js';
+} from '@/lib/engine/constants';
 
 export const TileType = {
   WALL: 0,
@@ -62,8 +62,8 @@ export const TileType = {
 export type TileType = (typeof TileType)[keyof typeof TileType];
 
 /** Re-export ColorValue for consumers that import color types from office/types */
-export type { ColorValue } from '../components/ui/types.js';
-import type { ColorValue } from '../components/ui/types.js';
+export type { ColorValue } from '@/components/ui/types';
+import type { ColorValue } from '@/components/ui/types';
 
 export const CharacterState = {
   IDLE: 'idle',
@@ -172,6 +172,8 @@ export interface OfficeLayout {
   tileColors?: Array<ColorValue | null>;
   /** Bumped when the bundled default layout changes; forces a reset on existing installs */
   layoutRevision?: number;
+  /** Whether the layout is locked for editing */
+  isLocked?: boolean;
 }
 
 export interface Character {
@@ -206,6 +208,8 @@ export interface Character {
   isActive: boolean;
   /** Assigned seat uid, or null if no seat */
   seatId: string | null;
+  /** Whether the agent is currently visually sitting in a chair */
+  isSeated: boolean;
   /** The command currently being executed (e.g. 'RAG_SEARCH'), or null */
   activeCommand: string | null;
   /** The furniture uid the agent is walking to / interacting with, or null */
@@ -213,7 +217,9 @@ export interface Character {
   /** Timer counting down how long the interaction state lasts */
   interactionTimer: number;
   /** Active speech bubble type, or null if none showing */
-  bubbleType: 'permission' | 'waiting' | null;
+  bubbleType: 'permission' | 'waiting' | 'thinking' | 'reading' | 'typing' | null;
+  /** Text content for the speech bubble */
+  bubbleText?: string;
   /** Countdown timer for bubble (waiting: 2→0, permission: unused) */
   bubbleTimer: number;
   /** Timer to stay seated while inactive after seat reassignment (counts down to 0) */
@@ -247,3 +253,43 @@ export interface Character {
   /** Cumulative output tokens consumed */
   outputTokens: number;
 }
+
+// ── Legacy Asset Types (Migrated) ──────────────────────────────
+
+export interface LegacyCatalogEntry {
+  id: string;
+  name: string;
+  label: string;
+  category: string;
+  file: string;
+  furniturePath: string;
+  width: number;
+  height: number;
+  footprintW: number;
+  footprintH: number;
+  isDesk: boolean;
+  canPlaceOnWalls: boolean;
+  canPlaceOnSurfaces?: boolean;
+  backgroundTiles?: number;
+  groupId?: string;
+  orientation?: string;
+  state?: string;
+  mirrorSide?: boolean;
+  rotationScheme?: string;
+  animationGroup?: string;
+  frame?: number;
+}
+
+export interface AssetIndex {
+  floors: string[];
+  walls: string[];
+  characters: string[];
+  defaultLayout: string | null;
+}
+
+export interface CharacterDirectionSprites {
+  down: SpriteData[];
+  up: SpriteData[];
+  right: SpriteData[];
+}
+

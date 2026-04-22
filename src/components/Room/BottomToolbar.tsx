@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import type { WorkspaceFolder } from '../../hooks/useExtensionMessages';
+import type { WorkspaceFolder } from '@/hooks/useExtensionMessages';
 import { vscode } from '../../lib/engine/vscodeApi';
 import { Button } from '../ui/Button';
 import { Dropdown, DropdownItem } from '../ui/Dropdown';
@@ -12,6 +12,7 @@ interface BottomToolbarProps {
   isSettingsOpen: boolean;
   onToggleSettings: () => void;
   workspaceFolders: WorkspaceFolder[];
+  isLocked: boolean;
 }
 
 export function BottomToolbar({
@@ -21,6 +22,7 @@ export function BottomToolbar({
   isSettingsOpen,
   onToggleSettings,
   workspaceFolders,
+  isLocked,
 }: BottomToolbarProps) {
   const [isFolderPickerOpen, setIsFolderPickerOpen] = useState(false);
   const [isBypassMenuOpen, setIsBypassMenuOpen] = useState(false);
@@ -119,9 +121,10 @@ export function BottomToolbar({
       <Button
         variant={isEditMode ? 'active' : 'default'}
         onClick={onToggleEditMode}
-        title="Edit office layout"
+        title={isLocked ? 'Layout is locked' : 'Edit office layout'}
+        className={isLocked ? 'opacity-50 cursor-not-allowed grayscale' : ''}
       >
-        Layout
+        {isLocked ? '🔒 Layout' : 'Layout'}
       </Button>
       <Button
         variant={isSettingsOpen ? 'active' : 'default'}

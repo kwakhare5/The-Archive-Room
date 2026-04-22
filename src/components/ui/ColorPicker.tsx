@@ -1,4 +1,4 @@
-import type { ColorValue } from './types.js';
+import type { ColorValue } from './types';
 
 function ColorSlider({
   label,

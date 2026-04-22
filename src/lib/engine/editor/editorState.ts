@@ -1,7 +1,7 @@
-import type { ColorValue } from '../../components/ui/types.js';
-import { DEFAULT_FLOOR_COLOR, DEFAULT_WALL_COLOR, UNDO_STACK_MAX_SIZE } from '../../constants.js';
-import type { OfficeLayout, TileType as TileTypeVal } from '../types.js';
-import { EditTool, TileType } from '../types.js';
+import type { ColorValue } from '@/components/ui/types';
+import { DEFAULT_FLOOR_COLOR, DEFAULT_WALL_COLOR, UNDO_STACK_MAX_SIZE } from '@/lib/engine/constants';
+import type { OfficeLayout, TileType as TileTypeVal } from '@/lib/engine/types';
+import { EditTool, TileType } from '@/lib/engine/types';
 
 export class EditorState {
   isEditMode = false;
@@ -105,6 +105,46 @@ export class EditorState {
   clearDrag(): void {
     this.dragUid = null;
     this.isDragMoving = false;
+  }
+
+  setIsEditMode(val: boolean): void {
+    this.isEditMode = val;
+  }
+
+  setActiveTool(tool: EditTool): void {
+    this.activeTool = tool;
+  }
+
+  setSelectedTileType(type: TileTypeVal): void {
+    this.selectedTileType = type;
+  }
+
+  setSelectedFurnitureType(type: string): void {
+    this.selectedFurnitureType = type;
+  }
+
+  setFloorColor(color: ColorValue): void {
+    this.floorColor = color;
+  }
+
+  setWallColor(color: ColorValue): void {
+    this.wallColor = color;
+  }
+
+  setSelectedWallSet(index: number): void {
+    this.selectedWallSet = index;
+  }
+
+  setDirty(val: boolean): void {
+    this.isDirty = val;
+  }
+
+  setWallDragAdding(val: boolean | null): void {
+    this.wallDragAdding = val;
+  }
+
+  setPickedFurnitureColor(color: ColorValue | null): void {
+    this.pickedFurnitureColor = color;
   }
 
   reset(): void {

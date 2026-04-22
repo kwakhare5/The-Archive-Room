@@ -15,9 +15,10 @@ import { vscode } from '@/lib/engine/vscodeApi';
 import { BottomToolbar } from './BottomToolbar';
 import { MigrationNotice } from './MigrationNotice';
 import { SettingsModal } from './SettingsModal';
-import { ZoomControls } from '../ZoomControls'; // Need to port this
+import { ZoomControls } from '../ZoomControls';
 import { ToolOverlay } from '@/lib/engine/components/ToolOverlay';
 import { EditorToolbar } from '@/lib/engine/editor/EditorToolbar';
+import { AgentQueryInput } from './AgentQueryInput';
 
 /**
  * 🚨 UI IMMUTABILITY LOCK: RoomDashboard
@@ -32,7 +33,8 @@ export default function RoomDashboard() {
   useEffect(() => {
     if (isBrowserRuntime) {
       setTimeout(() => {
-        void import('@/lib/engine/browserMock').then(({ dispatchMockMessages }) => {
+        void import('@/lib/engine/browserMock').then(async ({ initBrowserMock, dispatchMockMessages }) => {
+          await initBrowserMock();
           dispatchMockMessages();
         });
       }, 500);
@@ -55,7 +57,7 @@ export default function RoomDashboard() {
     loadedAssets,
     workspaceFolders,
     externalAssetDirectories,
-    extensionVersion,
+    // extensionVersion,
     watchAllSessions,
     setWatchAllSessions,
     alwaysShowLabels,
@@ -68,21 +70,38 @@ export default function RoomDashboard() {
   const showMigrationNotice = layoutWasReset && !migrationNoticeDismissed;
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [alwaysShowOverlay, setAlwaysShowOverlay] = useState(false);
-
-  useEffect(() => {
-    setAlwaysShowOverlay(alwaysShowLabels);
-  }, [alwaysShowLabels]);
+  // Use alwaysShowLabels directly from hook to avoid cascading renders
+  const showOverlay = alwaysShowLabels;
 
   const handleToggleAlwaysShowOverlay = useCallback(() => {
-    setAlwaysShowOverlay((prev) => {
-      const newVal = !prev;
-      vscode.postMessage({ type: 'setAlwaysShowLabels', enabled: newVal });
-      return newVal;
-    });
-  }, []);
+    vscode.postMessage({ type: 'setAlwaysShowLabels', enabled: !alwaysShowLabels });
+  }, [alwaysShowLabels]);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isQuerying, setIsQuerying] = useState(false);
+
+  const handleAgentQuery = useCallback(async (query: string) => {
+    setIsQuerying(true);
+    try {
+      // Pick a random active agent to represent the query if none selected
+      const activeAgents = Array.from(officeState.characters.values()).filter(c => c.isActive && !c.isSubagent);
+      const agentId = officeState.selectedAgentId || (activeAgents.length > 0 ? activeAgents[0].id : 1);
+      
+      const response = await fetch('http://localhost:8765/agent/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, agent_id: agentId })
+      });
+      
+      if (!response.ok) {
+        console.error('Agent query failed:', await response.text());
+      }
+    } catch (err) {
+      console.error('Failed to send agent query:', err);
+    } finally {
+      setIsQuerying(false);
+    }
+  }, [officeState]);
 
   const [editorTickForKeyboard, setEditorTickForKeyboard] = useState(0);
   useEditorKeyboard(
@@ -141,6 +160,8 @@ export default function RoomDashboard() {
         assetsLoaded={assetsLoaded}
       />
 
+      <AgentQueryInput onQuery={handleAgentQuery} isLoading={isQuerying} />
+
       {/* Vignette overlay */}
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'var(--vignette)' }} />
 
@@ -171,10 +192,14 @@ export default function RoomDashboard() {
               onRedo={editor.handleRedo}
               onFactoryReset={editor.handleFactoryReset}
               onSave={editor.handleSave}
+              onToggleLock={editor.handleToggleLock}
+              isLocked={!!officeState.getLayout().isLocked}
               loadedAssets={loadedAssets}
             />
           );
         })()}
+
+      <ZoomControls zoom={editor.zoom} onZoomChange={editor.handleZoomChange} />
 
       <ToolOverlay
         officeState={officeState}
@@ -185,7 +210,7 @@ export default function RoomDashboard() {
         zoom={editor.zoom}
         panRef={editor.panRef}
         onCloseAgent={handleCloseAgent}
-        alwaysShowOverlay={alwaysShowOverlay}
+        alwaysShowOverlay={showOverlay}
       />
 
       <BottomToolbar
@@ -195,6 +220,7 @@ export default function RoomDashboard() {
         isSettingsOpen={isSettingsOpen}
         onToggleSettings={() => setIsSettingsOpen((v) => !v)}
         workspaceFolders={workspaceFolders}
+        isLocked={!!officeState.getLayout().isLocked}
       />
 
       <SettingsModal
@@ -202,7 +228,7 @@ export default function RoomDashboard() {
         onClose={() => setIsSettingsOpen(false)}
         isDebugMode={false}
         onToggleDebugMode={() => {}}
-        alwaysShowOverlay={alwaysShowOverlay}
+        alwaysShowOverlay={showOverlay}
         onToggleAlwaysShowOverlay={handleToggleAlwaysShowOverlay}
         externalAssetDirectories={externalAssetDirectories}
         watchAllSessions={watchAllSessions}

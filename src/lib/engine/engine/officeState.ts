@@ -12,17 +12,17 @@ import {
   READ_INTERACTION_DURATION_SEC,
   THINK_INTERACTION_DURATION_SEC,
   WAITING_BUBBLE_DURATION_SEC,
-} from '../constants';
-import { getAnimationFrames, getCatalogEntry, getOnStateType } from '../layout/furnitureCatalog';
+} from '@/lib/engine/constants';
+import { getAnimationFrames, getCatalogEntry, getOnStateType } from '@/lib/engine/layout/furnitureCatalog';
 import {
   createDefaultLayout,
   getBlockedTiles,
   layoutToFurnitureInstances,
   layoutToSeats,
   layoutToTileMap,
-} from '../layout/layoutSerializer';
-import { findPath, getWalkableTiles, isWalkable } from '../layout/tileMap';
-import { getLoadedCharacterCount } from '../sprites/spriteData';
+} from '@/lib/engine/layout/layoutSerializer';
+import { findPath, getWalkableTiles, isWalkable } from '@/lib/engine/layout/tileMap';
+import { getLoadedCharacterCount } from '@/lib/engine/sprites/spriteData';
 import type {
   Character,
   FurnitureInstance,
@@ -30,8 +30,8 @@ import type {
   PlacedFurniture,
   Seat,
   TileType as TileTypeVal,
-} from '../types';
-import { CharacterState, Direction, MATRIX_EFFECT_DURATION, TILE_SIZE } from '../types';
+} from '@/lib/engine/types';
+import { CharacterState, Direction, MATRIX_EFFECT_DURATION, TILE_SIZE } from '@/lib/engine/types';
 import { palaceBridge } from '@/lib/bridge';
 import { createCharacter, updateCharacter } from './characters';
 import { matrixEffectSeeds } from './matrixEffect';
@@ -508,9 +508,12 @@ export class OfficeState {
         // Walk to target, then the WALK handler will need to know what to do on arrival.
         // We store the pending state on the character for the arrival handler.
         // Clear seated state before moving to prevent "standing on chair" glitch
+        if (ch.seatId) {
+          const seat = this.seats.get(ch.seatId);
+          if (seat) seat.assigned = false;
+        }
         ch.isSeated = false;
         ch.seatId = null;
-        this.rebuildOccupancy();
 
         ch.path = path;
         ch.moveProgress = 0;

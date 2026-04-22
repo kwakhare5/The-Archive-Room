@@ -6,8 +6,8 @@ import type {
   PlacedFurniture,
   Seat,
   TileType as TileTypeVal,
-} from '../types';
-import { DEFAULT_COLS, DEFAULT_ROWS, Direction, TILE_SIZE, TileType } from '../types';
+} from '@/lib/engine/types';
+import { DEFAULT_COLS, DEFAULT_ROWS, Direction, TILE_SIZE, TileType } from '@/lib/engine/types';
 import { getCatalogEntry, getOrientationInGroup } from './furnitureCatalog';
 
 /** Convert flat tile array from layout into 2D grid */

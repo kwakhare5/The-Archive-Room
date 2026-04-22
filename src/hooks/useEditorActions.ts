@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState } from 'react';
 
-import type { ColorValue } from '../components/ui/types.js';
-import { LAYOUT_SAVE_DEBOUNCE_MS, ZOOM_MAX, ZOOM_MIN } from '../constants.js';
-import type { ExpandDirection } from '../office/editor/editorActions.js';
+import type { ColorValue } from '@/components/ui/types';
+import { LAYOUT_SAVE_DEBOUNCE_MS, ZOOM_MAX, ZOOM_MIN } from '@/lib/engine/constants';
+import type { ExpandDirection } from '@/lib/engine/editor/editorActions';
 import {
   canPlaceFurniture,
   expandLayout,
@@ -13,24 +13,24 @@ import {
   removeFurniture,
   rotateFurniture,
   toggleFurnitureState,
-} from '../office/editor/editorActions.js';
-import type { EditorState } from '../office/editor/editorState.js';
-import type { OfficeState } from '../office/engine/officeState.js';
+} from '@/lib/engine/editor/editorActions';
+import type { EditorState } from '@/lib/engine/editor/editorState';
+import type { OfficeState } from '@/lib/engine/engine/officeState';
 import {
   getCatalogEntry,
   getRotatedType,
   getToggledType,
-} from '../office/layout/furnitureCatalog.js';
-import { defaultZoom } from '../office/toolUtils.js';
+} from '@/lib/engine/layout/furnitureCatalog';
+import { defaultZoom } from '@/lib/engine/toolUtils';
 import type {
   EditTool as EditToolType,
   OfficeLayout,
   PlacedFurniture,
   TileType as TileTypeVal,
-} from '../office/types.js';
-import { EditTool } from '../office/types.js';
-import { TileType } from '../office/types.js';
-import { vscode } from '../vscodeApi.js';
+} from '@/lib/engine/types';
+import { EditTool } from '@/lib/engine/types';
+import { TileType } from '@/lib/engine/types';
+import { vscode } from '@/lib/engine/vscodeApi';
 
 interface EditorActions {
   isEditMode: boolean;
@@ -56,6 +56,7 @@ interface EditorActions {
   handleRedo: () => void;
   handleReset: () => void;
   handleFactoryReset: () => void;
+  handleToggleLock: () => void;
   handleSave: () => void;
   handleZoomChange: (zoom: number) => void;
   handleEditorTileAction: (col: number, row: number) => void;
@@ -93,9 +94,10 @@ export function useEditorActions(
   const applyEdit = useCallback(
     (newLayout: OfficeLayout) => {
       const os = getOfficeState();
+      if (os.getLayout().isLocked) return;
       editorState.pushUndo(os.getLayout());
       editorState.clearRedo();
-      editorState.isDirty = true;
+      editorState.setDirty(true);
       setIsDirty(true);
       os.rebuildFromLayout(newLayout);
       saveLayout(newLayout);
@@ -104,14 +106,38 @@ export function useEditorActions(
     [getOfficeState, editorState, saveLayout],
   );
 
+  const handleToggleLock = useCallback(() => {
+    const os = getOfficeState();
+    const layout = os.getLayout();
+    const newLayout = { ...layout, isLocked: !layout.isLocked };
+    
+    // If locking, exit edit mode
+    if (newLayout.isLocked) {
+      setIsEditMode(false);
+      editorState.setIsEditMode(false);
+      editorState.clearSelection();
+      editorState.clearGhost();
+      editorState.clearDrag();
+    }
+
+    os.rebuildFromLayout(newLayout);
+    vscode.postMessage({ type: 'saveLayout', layout: newLayout });
+    setEditorTick((n) => n + 1);
+  }, [getOfficeState, editorState]);
+
   const handleOpenClaude = useCallback(() => {
     vscode.postMessage({ type: 'openClaude' });
   }, []);
 
   const handleToggleEditMode = useCallback(() => {
     setIsEditMode((prev) => {
+      const layout = getOfficeState().getLayout();
+      if (layout.isLocked) {
+        handleToggleLock(); // Unlock if clicking while locked
+        return false;
+      }
       const next = !prev;
-      editorState.isEditMode = next;
+      editorState.setIsEditMode(next);
       if (next) {
         // Initialize wallColor from existing wall tiles so new walls match
         const os = getOfficeState();
@@ -119,7 +145,7 @@ export function useEditorActions(
         if (layout.tileColors) {
           for (let i = 0; i < layout.tiles.length; i++) {
             if (layout.tiles[i] === TileType.WALL && layout.tileColors[i]) {
-              editorState.wallColor = { ...layout.tileColors[i]! };
+              editorState.setWallColor({ ...layout.tileColors[i]! });
               break;
             }
           }
@@ -132,15 +158,15 @@ export function useEditorActions(
       }
       return next;
     });
-  }, [editorState, getOfficeState]);
+  }, [editorState, getOfficeState, handleToggleLock]);
 
   // Tool toggle: clicking already-active tool deselects it (returns to SELECT)
   const handleToolChange = useCallback(
     (tool: EditToolType) => {
       if (editorState.activeTool === tool) {
-        editorState.activeTool = EditTool.SELECT;
+        editorState.setActiveTool(EditTool.SELECT);
       } else {
-        editorState.activeTool = tool;
+        editorState.setActiveTool(tool);
       }
       editorState.clearSelection();
       editorState.clearGhost();
@@ -154,7 +180,7 @@ export function useEditorActions(
 
   const handleTileTypeChange = useCallback(
     (type: TileTypeVal) => {
-      editorState.selectedTileType = type;
+      editorState.setSelectedTileType(type);
       setEditorTick((n) => n + 1);
     },
     [editorState],
@@ -162,7 +188,7 @@ export function useEditorActions(
 
   const handleFloorColorChange = useCallback(
     (color: ColorValue) => {
-      editorState.floorColor = color;
+      editorState.setFloorColor(color);
       setEditorTick((n) => n + 1);
     },
     [editorState],
@@ -173,7 +199,7 @@ export function useEditorActions(
 
   const handleWallColorChange = useCallback(
     (color: ColorValue) => {
-      editorState.wallColor = color;
+      editorState.setWallColor(color);
 
       // Update all existing wall tiles to the new color
       const os = getOfficeState();
@@ -195,7 +221,7 @@ export function useEditorActions(
           wallColorEditActiveRef.current = true;
         }
         const newLayout = { ...layout, tileColors: newColors };
-        editorState.isDirty = true;
+        editorState.setDirty(true);
         setIsDirty(true);
         os.rebuildFromLayout(newLayout);
         saveLayout(newLayout);
@@ -207,7 +233,7 @@ export function useEditorActions(
 
   const handleWallSetChange = useCallback(
     (setIndex: number) => {
-      editorState.selectedWallSet = setIndex;
+      editorState.setSelectedWallSet(setIndex);
       setEditorTick((n) => n + 1);
     },
     [editorState],
@@ -237,7 +263,7 @@ export function useEditorActions(
       );
       const newLayout = { ...layout, furniture: newFurniture };
 
-      editorState.isDirty = true;
+      editorState.setDirty(true);
       setIsDirty(true);
       os.rebuildFromLayout(newLayout);
       saveLayout(newLayout);
@@ -250,10 +276,10 @@ export function useEditorActions(
     (type: string) => {
       // Clicking the same item deselects it (no ghost), stays in furniture mode
       if (editorState.selectedFurnitureType === type) {
-        editorState.selectedFurnitureType = '';
+        editorState.setSelectedFurnitureType('');
         editorState.clearGhost();
       } else {
-        editorState.selectedFurnitureType = type;
+        editorState.setSelectedFurnitureType(type);
       }
       setEditorTick((n) => n + 1);
     },
@@ -277,7 +303,7 @@ export function useEditorActions(
     if (editorState.activeTool === EditTool.FURNITURE_PLACE) {
       const rotated = getRotatedType(editorState.selectedFurnitureType, 'cw');
       if (rotated) {
-        editorState.selectedFurnitureType = rotated;
+        editorState.setSelectedFurnitureType(rotated);
         setEditorTick((n) => n + 1);
       }
       return;
@@ -297,7 +323,7 @@ export function useEditorActions(
     if (editorState.activeTool === EditTool.FURNITURE_PLACE) {
       const toggled = getToggledType(editorState.selectedFurnitureType);
       if (toggled) {
-        editorState.selectedFurnitureType = toggled;
+        editorState.setSelectedFurnitureType(toggled);
         setEditorTick((n) => n + 1);
       }
       return;
@@ -320,7 +346,7 @@ export function useEditorActions(
     editorState.pushRedo(os.getLayout());
     os.rebuildFromLayout(prev);
     saveLayout(prev);
-    editorState.isDirty = true;
+    editorState.setDirty(true);
     setIsDirty(true);
     setEditorTick((n) => n + 1);
   }, [getOfficeState, editorState, saveLayout]);
@@ -333,7 +359,7 @@ export function useEditorActions(
     editorState.pushUndo(os.getLayout());
     os.rebuildFromLayout(next);
     saveLayout(next);
-    editorState.isDirty = true;
+    editorState.setDirty(true);
     setIsDirty(true);
     setEditorTick((n) => n + 1);
   }, [getOfficeState, editorState, saveLayout]);
@@ -363,7 +389,7 @@ export function useEditorActions(
     const layout = os.getLayout();
     lastSavedLayoutRef.current = structuredClone(layout);
     vscode.postMessage({ type: 'saveLayout', layout });
-    editorState.isDirty = false;
+    editorState.setDirty(false);
     setIsDirty(false);
   }, [getOfficeState, editorState]);
 
@@ -473,7 +499,7 @@ export function useEditorActions(
 
         // First tile of drag sets direction
         if (editorState.wallDragAdding === null) {
-          editorState.wallDragAdding = !isWall;
+          editorState.setWallDragAdding(!isWall);
         }
 
         if (editorState.wallDragAdding) {
@@ -583,9 +609,9 @@ export function useEditorActions(
           );
         });
         if (hit) {
-          editorState.selectedFurnitureType = hit.type;
-          editorState.pickedFurnitureColor = hit.color ? { ...hit.color } : null;
-          editorState.activeTool = EditTool.FURNITURE_PLACE;
+          editorState.setSelectedFurnitureType(hit.type);
+          editorState.setPickedFurnitureColor(hit.color ? { ...hit.color } : null);
+          editorState.setActiveTool(EditTool.FURNITURE_PLACE);
         }
         setEditorTick((n) => n + 1);
       } else if (editorState.activeTool === EditTool.EYEDROPPER) {
@@ -604,20 +630,20 @@ export function useEditorActions(
 
         if (isWall) {
           // Pick specific wall piece/color and switch to wall tool
-          editorState.selectedTileType = tile;
+          editorState.setSelectedTileType(tile);
           const color = layout.tileColors?.[idx];
           if (color) {
-            editorState.wallColor = { ...color };
+            editorState.setWallColor({ ...color });
           }
-          editorState.activeTool = EditTool.WALL_PAINT;
+          editorState.setActiveTool(EditTool.WALL_PAINT);
         } else if (tile !== undefined && tile !== TileType.VOID) {
           // Pick floor type/color and switch to floor tool
-          editorState.selectedTileType = tile;
+          editorState.setSelectedTileType(tile);
           const color = layout.tileColors?.[idx];
           if (color) {
-            editorState.floorColor = { ...color };
+            editorState.setFloorColor({ ...color });
           }
-          editorState.activeTool = EditTool.TILE_PAINT;
+          editorState.setActiveTool(EditTool.TILE_PAINT);
         }
         setEditorTick((n) => n + 1);
       } else if (editorState.activeTool === EditTool.SELECT) {
@@ -676,6 +702,7 @@ export function useEditorActions(
     [getOfficeState, applyEdit],
   );
 
+
   return {
     isEditMode,
     editorTick,
@@ -700,6 +727,7 @@ export function useEditorActions(
     handleRedo,
     handleReset,
     handleFactoryReset,
+    handleToggleLock,
     handleSave,
     handleZoomChange,
     handleEditorTileAction,

@@ -1,4 +1,4 @@
-import type { FurnitureCatalogEntry, SpriteData } from '../types.js';
+import type { FurnitureCatalogEntry, SpriteData } from '@/lib/engine/types';
 
 export interface LoadedAssetData {
   catalog: Array<{

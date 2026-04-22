@@ -1,4 +1,4 @@
-import type { ColorValue } from '../../components/ui/types.js';
+import type { ColorValue } from '@/components/ui/types';
 import {
   BUBBLE_FADE_DURATION_SEC,
   BUBBLE_SITTING_OFFSET_PX,
@@ -33,25 +33,29 @@ import {
   SELECTION_HIGHLIGHT_COLOR,
   VOID_TILE_DASH_PATTERN,
   VOID_TILE_OUTLINE_COLOR,
-} from '../../constants.js';
-import { getColorizedFloorSprite, hasFloorSprites, WALL_COLOR } from '../floorTiles.js';
-import { getCachedSprite, getOutlineSprite } from '../sprites/spriteCache.js';
+} from '@/lib/engine/constants';
+import { getColorizedFloorSprite, hasFloorSprites, WALL_COLOR } from '../floorTiles';
+import { getCachedSprite, getOutlineSprite } from '@/lib/engine/sprites/spriteCache';
 import {
   BUBBLE_PERMISSION_SPRITE,
+  BUBBLE_READING_SPRITE,
+  BUBBLE_THINKING_SPRITE,
+  BUBBLE_TYPING_SPRITE,
   BUBBLE_WAITING_SPRITE,
   getCharacterSprites,
-} from '../sprites/spriteData.js';
+} from '@/lib/engine/sprites/spriteData';
 import type {
   Character,
   FurnitureInstance,
+  PlacedFurniture,
   Seat,
   SpriteData,
   TileType as TileTypeVal,
-} from '../types.js';
-import { CharacterState, TILE_SIZE, TileType } from '../types.js';
-import { getWallInstances, hasWallSprites, wallColorToHex } from '../wallTiles.js';
-import { getCharacterSprite } from './characters.js';
-import { renderMatrixEffect } from './matrixEffect.js';
+} from '@/lib/engine/types';
+import { CharacterState, TILE_SIZE, TileType } from '@/lib/engine/types';
+import { getWallInstances, hasWallSprites, wallColorToHex } from '../wallTiles';
+import { getCharacterSprite } from './characters';
+import { renderMatrixEffect } from './matrixEffect';
 
 // ── Render functions ────────────────────────────────────────────
 
@@ -111,7 +115,7 @@ export function renderTileGrid(
       const color = tileColors?.[colorIdx] ?? { h: 0, s: 0, b: 0, c: 0 };
       const sprite = getColorizedFloorSprite(tile, color);
       const cached = getCachedSprite(sprite, zoom);
-      
+
       // Draw standard floor tiles using the same precise boundaries
       ctx.drawImage(cached, colStart, rowStart, colW, rowH);
     }
@@ -141,7 +145,7 @@ export function renderScene(
     const cached = getCachedSprite(f.sprite, zoom);
     const fx = offsetX + f.x * zoom;
     const fy = offsetY + f.y * zoom;
-    
+
     drawables.push({
       zY: f.zY,
       draw: (c) => {
@@ -166,13 +170,9 @@ export function renderScene(
     const spriteData = getCharacterSprite(ch, sprites);
     const cached = getCachedSprite(spriteData, zoom);
     // Sitting offset: shift character down when seated so they visually sit in the chair
-    const isSittingState = 
-      ch.state === CharacterState.TYPE || 
-      ch.state === CharacterState.READING || 
-      ch.state === CharacterState.THINKING || 
-      ch.state === CharacterState.DISCARDING;
+    const isSittingState = ch.isSeated;
     const sittingOffset = isSittingState ? CHARACTER_SITTING_OFFSET_PX : 0;
-    
+
     // Anchor at bottom-center of character — round to integer device pixels
     const drawX = Math.round(offsetX + ch.x * zoom - cached.width / 2);
     const drawY = Math.round(offsetY + (ch.y + sittingOffset) * zoom - cached.height);
@@ -505,6 +505,36 @@ function renderRotateButton(
   return { cx, cy, radius };
 }
 
+function renderTargetHighlights(
+  ctx: CanvasRenderingContext2D,
+  layoutFurniture: PlacedFurniture[],
+  characters: Character[],
+  offsetX: number,
+  offsetY: number,
+  zoom: number,
+): void {
+  const pulse = 0.5 + 0.3 * Math.sin(performance.now() / 200);
+  
+  for (const ch of characters) {
+    if (!ch.targetFurnitureUid || !ch.activeCommand) continue;
+    
+    const item = layoutFurniture.find(f => f.uid === ch.targetFurnitureUid);
+    if (!item) continue;
+    
+    // Draw pulsing highlight at furniture tile
+    const s = TILE_SIZE * zoom;
+    const fx = offsetX + item.col * s;
+    const fy = offsetY + item.row * s;
+    
+    ctx.save();
+    ctx.strokeStyle = `rgba(255, 255, 255, ${pulse})`;
+    ctx.lineWidth = 2 * zoom;
+    ctx.setLineDash([4 * zoom, 2 * zoom]);
+    ctx.strokeRect(fx - 2, fy - 2, s + 4, s + 4);
+    ctx.restore();
+  }
+}
+
 // ── Speech bubbles ──────────────────────────────────────────────
 
 function renderBubbles(
@@ -517,8 +547,12 @@ function renderBubbles(
   for (const ch of characters) {
     if (!ch.bubbleType) continue;
 
-    const sprite =
-      ch.bubbleType === 'permission' ? BUBBLE_PERMISSION_SPRITE : BUBBLE_WAITING_SPRITE;
+    let sprite: SpriteData;
+    if (ch.bubbleType === 'permission') sprite = BUBBLE_PERMISSION_SPRITE;
+    else if (ch.bubbleType === 'thinking') sprite = BUBBLE_THINKING_SPRITE;
+    else if (ch.bubbleType === 'reading') sprite = BUBBLE_READING_SPRITE;
+    else if (ch.bubbleType === 'typing') sprite = BUBBLE_TYPING_SPRITE;
+    else sprite = BUBBLE_WAITING_SPRITE;
 
     // Compute opacity: permission = full, waiting = fade in last 0.5s
     let alpha = 1.0;
@@ -605,6 +639,7 @@ export function renderFrame(
   tileColors?: Array<ColorValue | null>,
   layoutCols?: number,
   layoutRows?: number,
+  layoutFurniture?: PlacedFurniture[],
 ): { offsetX: number; offsetY: number } {
   // 1. HARD GATE: Do not render anything if assets aren't fully ready in the engine
   if (!hasFloorSprites()) {
@@ -643,8 +678,8 @@ export function renderFrame(
 
   // Build wall instances for z-sorting with furniture and characters
   // Match original project: walls are z-sorted sprites with baked 3D perspective
-  const wallInstances = hasWallSprites() 
-    ? getWallInstances(tileMap, tileColors, editor?.selectedWallSet ?? 0) 
+  const wallInstances = hasWallSprites()
+    ? getWallInstances(tileMap, tileColors, editor?.selectedWallSet ?? 0)
     : [];
   const allFurniture = wallInstances.length > 0 ? [...wallInstances, ...furniture] : furniture;
 
@@ -668,6 +703,11 @@ export function renderFrame(
   }
 
   renderScene(ctx, allFurniture, characters, offsetX, offsetY, zoom, selectedId, hoveredId);
+
+  // Target furniture highlights
+  if (layoutFurniture) {
+    renderTargetHighlights(ctx, layoutFurniture, characters, offsetX, offsetY, zoom);
+  }
 
   // Speech bubbles (always on top of characters)
   renderBubbles(ctx, characters, offsetX, offsetY, zoom);

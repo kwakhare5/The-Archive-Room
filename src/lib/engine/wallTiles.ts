@@ -16,11 +16,11 @@ import {
   MODULAR_GRAY, 
   MODULAR_SHADOW, 
   MODULAR_BORDER 
-} from '../constants.js';
-import { getColorizedSprite } from './colorize.js';
-import type { ColorValue } from '../components/ui/types.js';
-import type { FurnitureInstance, SpriteData, TileType as TileTypeVal } from './types.js';
-import { TileType } from './types.js';
+} from '@/lib/engine/constants';
+import { getColorizedSprite } from './colorize';
+import type { ColorValue } from '@/components/ui/types';
+import type { FurnitureInstance, SpriteData, TileType as TileTypeVal } from './types';
+import { TileType } from './types';
 
 /** Wall tile sets: each set has 16 sprites indexed by bitmask (0-15) */
 let wallSets: SpriteData[][] = [];

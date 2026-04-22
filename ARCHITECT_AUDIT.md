@@ -1,80 +1,60 @@
-# ARCHITECTURAL AUDIT: THE ARCHIVE ROOM
+# ARCHITECT AUDIT - The Archive Room & Karan's iPod
 
-## 🚨 UI IMMUTABILITY LOCK (ACTIVE: 2026-04-22)
-> [!IMPORTANT]
-> **SYSTEM LOCKDOWN INITIATED.**
-> The current UI design (Tailwind v4 / Pixel Art Aesthetic) is declared **FINAL** and **IMMUTABLE**.
-> No AI model is permitted to modify the layout, styling, color palette, or component structure of the frontend without explicit, separate permission from the USER.
-> **ZERO DRIFT POLICY**: Any proposed aesthetic changes will be automatically VETOED.
+## Risk Assessment Matrix
 
----
+| Component | Risk Level | Description | Impact |
+| :--- | :--- | :--- | :--- |
+| **State Persistence** | 🔴 CRITICAL | LocalStorage keys are fragmented (`vscode-state` vs `office-layout`). | User changes appear to be lost on refresh. |
+| **Layout Versioning** | 🟡 MEDIUM | `layoutRevision` logic in `browserMock` can silently overwrite manual edits. | Potential data loss if assets are updated on the server. |
+| **Mobile UX (iPod)** | 🟠 HIGH | `isKeyboardVisible` relies on viewport resize instead of focus events. | Layout "jitter" and stuck positions on mobile browsers. |
+| **Sync Engine** | 🟡 MEDIUM | WebSocket logic exists in backend but is not fully utilized by frontend stubs. | Lack of real-time multi-agent visualization. |
 
-# ARCHITECT_AUDIT: The Archive Room (Data Nexus)
-**Status**: 🚨 CRITICAL DRIFT DETECTED  
-**Date**: 2026-04-22  
-**Guardian**: @senior-architect
+## Detailed Findings & Solutions
 
----
+### 1. The Persistence Logic Hole
+**Problem**: The `vscodeApi.ts` stub (used in the web version) and `browserMock.ts` (the loader) are using different `localStorage` keys. 
+- `vscodeApi` uses `vscode-state`.
+- `browserMock` uses `office-layout`.
+**Solution**: Unify all persistence to use the `office-layout` key for the layout object and `office-state` for session metadata (selected agent, etc.).
+**Trade-off**: Requires a one-time migration of existing user data in the browser.
 
-## 🔍 Core-to-Surface Deep Scan
+### 2. Rendering Engine Z-Sorting
+**Problem**: Current sorting in `renderer.ts` uses `ch.y + TILE_SIZE / 2 + CHARACTER_Z_SORT_OFFSET`. This is a "magic number" approach that works for the current tile size but fails if we scale tiles or add tall furniture (e.g., high walls).
+**Solution**: Implement a `getZIndex(col, row, layer)` function that calculates a stable integer for sorting based on the isometric depth.
 
-### 1. Architectural Drift: SPA vs. RSC
-- **Current**: Vite-based SPA (Single Page Application).  
-- **Risk**: Low enterprise resume value. SPA architecture is "Month 0." It lacks Server Components, SEO optimization, and the production-grade robustness of **Next.js 15**.
-- **Impact**: You miss out on the #1 Frontend requirement in the "Elite Stack" Bible.
+### 3. Backend-Frontend Communication Bridge
+**Problem**: The UI uses REST (`fetch`) for saving but the backend is designed for WebSockets. 
+**Solution**: 
+- Implement a `useWebSocket` hook in the frontend.
+- Map incoming WS messages to `OfficeState` actions (e.g., `executeCommand`).
+- This allows the "Memory Palace" to react to external agent triggers in real-time.
 
-### 2. Logic Hole: Imperative Canvas vs. React Lifecycle
-- **Current**: `OfficeState` is a massive imperative class. 
-- **Risk**: React 19's concurrent rendering might clash with a raw Canvas game loop if not properly encapsulated.
-- **Impact**: Potential memory leaks or "ghost" agents if the WebSocket bridge (`PalaceEventBridge`) isn't managed via `useEffect` / `useSyncExternalStore`.
+### 4. iPod Viewport Stabilization
+**Problem**: The iPod UI (at `d:\Karan's iPod`) experiences layout shifts because it attempts to detect the virtual keyboard via viewport height changes.
+**Solution**: 
+- Transition to `dvh` units in CSS.
+- Tie the "keyboard shift" animation strictly to `onFocus` and `onBlur` events of text inputs.
+- Use `scrollIntoView({ behavior: 'smooth', block: 'center' })` on the active input to ensure it stays visible regardless of the OS keyboard behavior.
 
-### 3. Failure Point: Persistence Fragility
-- **Current**: Layouts and settings rely on `localStorage` or mock loaders.
-- **Risk**: Violates **Rule 01 (Always Live)**. A user on a different browser sees an empty room.
-- **Impact**: Makes the project feel like a "demo" rather than a "product."
+## Architectural Trade-offs
+- **Performance vs. Precision**: We are using a 2D Canvas for rendering. While high-performance, it lacks accessibility (no DOM nodes for furniture). We mitigate this with a "ToolOverlay" layer for interactivity.
+- **Serverless vs. Persistent**: The current backend is a singleton FastAPI server. Scaling to multiple users would require a Redis-backed session manager for the `ConnectionManager`.
 
-### 4. Technical Debt: Vanilla CSS Spaghetti
-- **Current**: Manual CSS variables in `index.css`.
-- **Risk**: Maintaining the "Pixel-Cyber" aesthetic across 20+ components without **Tailwind CSS v4** will lead to class collisions and design inconsistency.
-- **Impact**: Slower iteration speed and harder to implement the "Soft Palette" theme.
 
----
+## Global Protocol Alignment Audit
 
-## 🗺️ Pre-Solved Solutions (The Bible Path)
+| Rule | Status | Finding | Action |
+| :--- | :--- | :--- | :--- |
+| **Living Documents** | ✅ PASS | `task.md`, `walkthrough.md`, `CLAUDE.md` present. | None. |
+| **Elite Stack: Next.js** | 🟡 DRIFT | Project uses Next.js 16.2.4 (Bible: 14/15). | Document as intentional in `CLAUDE.md`. |
+| **Elite Stack: UI** | 🟡 DRIFT | Custom Pixel Engine (Bible: `shadcn/ui`). | Document as intentional in `CLAUDE.md`. |
+| **Absolute Permission** | ✅ PASS | Protocol present in `CLAUDE.md` and followed. | None. |
+| **Project Metadata** | ❌ FAIL | `package.json` name is `next-temp`. | Rename to `the-archive-room`. |
+| **Task Pulse** | 🟡 STALE | `task.md` shows all phases as 100% complete. | Add new phase for hardening. |
 
-### Solution A: The Next.js 15 Migration (Primary)
-- **Action**: Scaffold a new Next.js 15 project in the current directory using the **Elite Stack Blueprint**.
-- **Execution**: 
-    - Use `npx create-next-app@latest` with App Router, TS, and Tailwind v4.
-    - Move `webview-ui/src/office` (the engine) into `src/lib/engine`.
-    - Use a `Dynamic Import` for the `OfficeCanvas` to ensure it only runs on the client.
-
-### Solution B: Supabase pgvector Integration
-- **Action**: Replace `ChromaDB` (Local) with **Supabase**.
-- **Execution**:
-    - Use Supabase Auth for agent identification.
-    - Store the "Archive" documents in a Postgres table with a `vector` column.
-    - Fetch RAG context directly via the FastAPI backend using the Supabase Python SDK.
-
-### Solution C: Real-time State Synchronization
-- **Action**: Bridge the **FastAPI WebSocket** with a **Zustand** store.
-- **Execution**:
-    - Backend commands update a global state.
-    - The `OfficeState` engine listens to the store for movement triggers.
-    - This allows the **Chat Sidebar** and the **Pixel Room** to share the same "Thought Stream."
+### Architectural Justification (Drift Management)
+1. **Next.js 16**: Chosen for cutting-edge React 19 features and improved App Router performance. Local `AGENTS.md` notes this as a breaking-change aware choice.
+2. **Custom Engine**: The "Pixel art" requirement necessitates direct Canvas manipulation, which `shadcn/ui` (Radix-based) cannot fulfill for the core room visualization. Custom CSS used for UI overlays maintains visual parity.
 
 ---
-
-## 🛡️ Sentinel Verdict: MANDATORY VETO
-
-**Decision**: I am triggering the **Mandatory Veto** on the current Vite + Vanilla CSS stack. 
-
-**Rationale**: Continuing with Vite is a waste of your engineering hours. It will result in a project that looks "cool" but has 40% less market value than a **Next.js + Tailwind + Supabase** implementation.
-
-**The Pro-Path**:
-1.  **Initialize Next.js 15** in the root.
-2.  **Port the Canvas Engine** as a high-performance Client Component.
-3.  **Integrate Tailwind v4** for the "Data Nexus" design system.
-
----
-**Next Action**: Awaiting explicit USER OVERRIDE to continue with Vite, OR approval to begin the **Next.js 15 Elite Migration**.
+*Report generated by Antigravity Architect (@TAG) — 2026-04-22*

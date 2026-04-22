@@ -1,5 +1,5 @@
-export type { CatalogEntryWithCategory, FurnitureCategory } from './furnitureCatalog.js';
-export { FURNITURE_CATEGORIES, getCatalogByCategory, getCatalogEntry } from './furnitureCatalog.js';
+export type { CatalogEntryWithCategory, FurnitureCategory } from './furnitureCatalog';
+export { FURNITURE_CATEGORIES, getCatalogByCategory, getCatalogEntry } from './furnitureCatalog';
 export {
   createDefaultLayout,
   deserializeLayout,
@@ -9,5 +9,5 @@ export {
   layoutToSeats,
   layoutToTileMap,
   serializeLayout,
-} from './layoutSerializer.js';
-export { findPath, getWalkableTiles, isWalkable } from './tileMap.js';
+} from './layoutSerializer';
+export { findPath, getWalkableTiles, isWalkable } from './tileMap';

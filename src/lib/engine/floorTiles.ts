@@ -6,10 +6,10 @@
  * Caches colorized SpriteData by (pattern, h, s, b, c) key.
  */
 
-import type { ColorValue } from '../components/ui/types.js';
-import { CANVAS_ERROR_TILE_COLOR, FALLBACK_FLOOR_COLOR, TILE_SIZE } from '../constants.js';
-import { clearColorizeCache, getColorizedSprite } from './colorize.js';
-import type { SpriteData } from './types.js';
+import type { ColorValue } from '@/components/ui/types';
+import { CANVAS_ERROR_TILE_COLOR, FALLBACK_FLOOR_COLOR, TILE_SIZE } from '@/lib/engine/constants';
+import { clearColorizeCache, getColorizedSprite } from './colorize';
+import type { SpriteData } from './types';
 
 /** Default solid gray 16×16 tile used when floor tile PNGs are not loaded */
 const DEFAULT_FLOOR_SPRITE: SpriteData = Array.from(
@@ -21,7 +21,7 @@ const DEFAULT_FLOOR_SPRITE: SpriteData = Array.from(
 let floorSprites: SpriteData[] = [];
 
 // Re-export WALL_COLOR from constants for backward compatibility
-export { WALL_COLOR } from '../constants.js';
+export { WALL_COLOR } from '@/lib/engine/constants';
 
 /** Set floor tile sprites (called once when extension sends floorTilesLoaded) */
 export function setFloorSprites(sprites: SpriteData[]): void {

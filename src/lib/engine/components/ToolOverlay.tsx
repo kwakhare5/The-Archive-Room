@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+"use no memo";
+import { useEffect, useLayoutEffect, useState } from 'react';
 
-import { Button } from '../../components/ui/Button.js';
+import { Button } from '@/components/ui/Button';
 import {
   CHARACTER_SITTING_OFFSET_PX,
   FUEL_COLOR_CRITICAL,
@@ -17,11 +18,12 @@ import {
   TOKEN_DANGER_THRESHOLD,
   TOKEN_WARN_THRESHOLD,
   TOOL_OVERLAY_VERTICAL_OFFSET,
-} from '../../constants.js';
-import type { SubagentCharacter } from '../../hooks/useExtensionMessages.js';
-import type { OfficeState } from '../engine/officeState.js';
-import type { ToolActivity } from '../types.js';
-import { CharacterState, TILE_SIZE } from '../types.js';
+} from '@/lib/engine/constants';
+import { getDPR } from '@/lib/engine/toolUtils';
+import type { SubagentCharacter } from '@/hooks/useExtensionMessages';
+import type { OfficeState } from '@/lib/engine/engine/officeState';
+import type { ToolActivity } from '@/lib/engine/types';
+import { CharacterState, TILE_SIZE } from '@/lib/engine/types';
 
 interface ToolOverlayProps {
   officeState: OfficeState;
@@ -78,6 +80,8 @@ export function ToolOverlay({
   alwaysShowOverlay,
 }: ToolOverlayProps) {
   const [, setTick] = useState(0);
+  const [containerRect, setContainerRect] = useState<DOMRect | null>(null);
+
   useEffect(() => {
     let rafId = 0;
     const tick = () => {
@@ -88,17 +92,22 @@ export function ToolOverlay({
     return () => cancelAnimationFrame(rafId);
   }, []);
 
-  const el = containerRef.current;
-  if (!el) return null;
-  const rect = el.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
-  const canvasW = Math.round(rect.width * dpr);
-  const canvasH = Math.round(rect.height * dpr);
+  useLayoutEffect(() => {
+    if (containerRef.current) {
+      setContainerRect(containerRef.current.getBoundingClientRect());
+    }
+  }, [containerRef]);
+
+  if (!containerRect) return null;
+
+  const dpr = getDPR();
+  const canvasW = Math.round(containerRect.width * dpr);
+  const canvasH = Math.round(containerRect.height * dpr);
   const layout = officeState.getLayout();
   const mapW = layout.cols * TILE_SIZE * zoom;
   const mapH = layout.rows * TILE_SIZE * zoom;
-  const deviceOffsetX = Math.floor((canvasW - mapW) / 2) + Math.round(panRef.current.x);
-  const deviceOffsetY = Math.floor((canvasH - mapH) / 2) + Math.round(panRef.current.y);
+  const deviceOffsetX = Math.floor((canvasW - mapW) / 2) + Math.round(panRef.current?.x ?? 0);
+  const deviceOffsetY = Math.floor((canvasH - mapH) / 2) + Math.round(panRef.current?.y ?? 0);
 
   const selectedId = officeState.selectedAgentId;
   const hoveredId = officeState.hoveredAgentId;
@@ -128,7 +137,9 @@ export function ToolOverlay({
         // Get activity text
         const subHasPermission = isSub && ch.bubbleType === 'permission';
         let activityText: string;
-        if (isSub) {
+        if (ch.bubbleText) {
+          activityText = ch.bubbleText;
+        } else if (isSub) {
           if (subHasPermission) {
             activityText = 'Needs approval';
           } else {

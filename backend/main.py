@@ -2,7 +2,7 @@ import os
 import json
 import asyncio
 import logging
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Optional
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -13,6 +13,7 @@ logger = logging.getLogger("ArchiveRoom")
 
 # Load environment variables
 load_dotenv()
+from reasoning import brain
 
 app = FastAPI(title="The Archive Room Backend")
 
@@ -52,17 +53,60 @@ manager = ConnectionManager()
 async def root():
     return {"status": "The Archive Room Backend is Online"}
 
+from pydantic import BaseModel
+
+class QueryRequest(BaseModel):
+    query: str
+    agentId: Optional[int] = 0
+
+@app.post("/agent/query")
+async def process_query(req: QueryRequest):
+    """Processes a user query and dispatches an agent action."""
+    logger.info(f"Processing query: {req.query}")
+    
+    # 1. Ask Gemini to decide what to do
+    action = await brain.decide_action(req.query, req.agentId)
+    
+    # 2. Broadcast the action to all connected UIs
+    await manager.broadcast(action)
+    
+    return {
+        "status": "dispatched",
+        "action": action
+    }
+
+class LayoutData(BaseModel):
+    layout: dict
+
+@app.post("/save-layout")
+async def save_layout_api(data: LayoutData):
+    try:
+        # Save to public/assets/office-redesign.json (Relative to project root)
+        # Assuming we are running from project root or backend folder
+        target_path = os.path.join(os.path.dirname(__file__), "..", "public", "assets", "office-redesign.json")
+        with open(target_path, "w") as f:
+            json.dump(data.layout, f, indent=2)
+        logger.info(f"Layout saved to {target_path}")
+        return {"status": "success"}
+    except Exception as e:
+        logger.error(f"Failed to save layout: {e}")
+        return {"status": "error", "message": str(e)}
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         while True:
-            # Wait for messages from the UI
             data = await websocket.receive_text()
             message = json.loads(data)
             logger.info(f"Received from UI: {message}")
             
-            # TODO: Handle UI-driven events (like Chat Sidebar input)
+            if message.get("type") == "saveLayout":
+                # Handle save via websocket too
+                target_path = os.path.join(os.path.dirname(__file__), "..", "public", "assets", "office-redesign.json")
+                with open(target_path, "w") as f:
+                    json.dump(message.get("layout"), f, indent=2)
+                logger.info(f"Layout saved via WebSocket to {target_path}")
             
     except WebSocketDisconnect:
         manager.disconnect(websocket)

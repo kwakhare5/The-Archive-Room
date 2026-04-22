@@ -54,9 +54,13 @@ export class PalaceEventBridge {
   private reconnectDelay = 2000; // ms
 
   constructor(url?: string) {
-    // Allow override via query param for dev flexibility
-    const params = new URLSearchParams(window.location.search);
-    this.url = url ?? params.get('ws') ?? DEFAULT_WS_URL;
+    // Allow override via query param for dev flexibility (SSR safe)
+    let wsOverride: string | null = null;
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      wsOverride = params.get('ws');
+    }
+    this.url = url ?? wsOverride ?? DEFAULT_WS_URL;
   }
 
   /** Connect to the backend WebSocket and bind to OfficeState. */
@@ -121,22 +125,29 @@ export class PalaceEventBridge {
     this.reconnectDelay = Math.min(this.reconnectDelay * 1.5, 30000);
   }
 
-  private _handleCommand(msg: BackendCommand): void {
+  private _handleCommand(msg: any): void {
     const os = this.officeState;
     if (!os) return;
 
-    console.log('[PalaceEventBridge] Command received:', msg);
+    // Handle both wrapped and unwrapped commands
+    const data = msg.type === 'AGENT_COMMAND' ? msg : msg;
+    const command = data.command;
+    const agentId = data.agentId;
+    const target = data.targetUid || data.target;
+    const thought = data.thought || data.metadata?.thought;
 
-    switch (msg.command) {
+    console.log('[PalaceEventBridge] Command received:', { command, agentId, target, thought });
+
+    switch (command) {
       case 'SPAWN_AGENT': {
-        if (msg.agentId === undefined) break;
-        os.addAgent(msg.agentId);
+        if (agentId === undefined) break;
+        os.addAgent(agentId);
         break;
       }
 
       case 'REMOVE_AGENT': {
-        if (msg.agentId === undefined) break;
-        os.removeAgent(msg.agentId);
+        if (agentId === undefined) break;
+        os.removeAgent(agentId);
         break;
       }
 
@@ -147,18 +158,31 @@ export class PalaceEventBridge {
       case 'GENERATE_CODE':
       case 'WRITE_RESPONSE':
       case 'WAIT': {
-        if (msg.agentId === undefined) break;
-        const result = os.executeCommand(msg.agentId, msg.command, msg.target);
+        if (agentId === undefined) break;
+        const result = os.executeCommand(agentId, command, target);
         if (result.success) {
+          // Apply thought bubble if provided
+          if (thought) {
+            const ch = os.characters.get(agentId);
+            if (ch) {
+              ch.bubbleText = thought;
+              // Ensure bubbleType is set correctly based on command if it wasn't already
+              if (!ch.bubbleType) {
+                if (command === 'THINK') ch.bubbleType = 'thinking';
+                else if (command === 'RAG_SEARCH') ch.bubbleType = 'reading';
+                else ch.bubbleType = 'typing';
+              }
+            }
+          }
+
           // If there was a target, we'll emit AGENT_ARRIVED after the walk completes.
-          // For now emit immediately for stateless commands.
-          if (!msg.target) {
-            this._send({ event: 'AGENT_IDLE', agentId: msg.agentId });
+          if (!target) {
+            this._send({ event: 'AGENT_IDLE', agentId });
           }
         } else {
           this._send({
             event: 'ERROR',
-            agentId: msg.agentId,
+            agentId,
             message: result.error ?? 'Unknown error',
           });
         }
@@ -166,7 +190,7 @@ export class PalaceEventBridge {
       }
 
       default:
-        console.warn('[PalaceEventBridge] Unknown command:', msg.command);
+        console.warn('[PalaceEventBridge] Unknown command:', command);
     }
   }
 

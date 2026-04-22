@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
-import type { EditorState } from '../office/editor/editorState.js';
-import { EditTool } from '../office/types.js';
+import type { EditorState } from '@/lib/engine/editor/editorState';
+import { EditTool } from '@/lib/engine/types';
 
 export function useEditorKeyboard(
   isEditMode: boolean,
