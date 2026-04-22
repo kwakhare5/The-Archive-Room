@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "save": "powershell -ExecutionPolicy Bypass -File scripts/checkpoint.ps1"
   },
   "dependencies": {
     "next": "16.2.4",
