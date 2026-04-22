@@ -1,0 +1,25 @@
+{
+  "floors": [
+    "floors/floor_0.png",
+    "floors/floor_1.png",
+    "floors/floor_2.png",
+    "floors/floor_3.png",
+    "floors/floor_4.png",
+    "floors/floor_5.png",
+    "floors/floor_6.png",
+    "floors/floor_7.png",
+    "floors/floor_8.png"
+  ],
+  "walls": [
+    "walls/wall_0.png"
+  ],
+  "characters": [
+    "characters/char_0.png",
+    "characters/char_1.png",
+    "characters/char_2.png",
+    "characters/char_3.png",
+    "characters/char_4.png",
+    "characters/char_5.png"
+  ],
+  "defaultLayout": "office-redesign.json"
+}
