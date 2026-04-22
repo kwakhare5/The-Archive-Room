@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Karan's Complete Stack Bible</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0a;
+  --bg2: #111111;
+  --bg3: #1a1a1a;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #f0ede8;
+  --muted: #888;
+  --dim: #555;
+  --accent: #e8d5a3;
+  --accent2: #a3c4e8;
+  --accent3: #a3e8c4;
+  --accent4: #e8a3c4;
+  --accent5: #c4a3e8;
+  --accent6: #e8c4a3;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 0 0 80px;
+}
+
+/* HEADER */
+.hero {
+  padding: 48px 32px 36px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(232,213,163,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.hero-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.hero-title span { color: var(--accent); }
+.hero-sub {
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 500px;
+}
+
+/* NAV */
+.nav {
+  display: flex;
+  gap: 4px;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 100;
+}
+.nav::-webkit-scrollbar { display: none; }
+.nav-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  letter-spacing: 0.04em;
+}
+.nav-btn:hover { border-color: var(--border2); color: var(--text); }
+.nav-btn.active { background: var(--bg3); color: var(--text); border-color: var(--border2); }
+
+/* SECTIONS */
+.section {
+  display: none;
+  padding: 32px 32px 0;
+}
+.section.active { display: block; }
+
+.section-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.section-icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.section-meta { flex: 1; }
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.section-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+/* CARDS */
+.cards { display: flex; flex-direction: column; gap: 12px; }
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.card:hover { border-color: var(--border2); }
+.card-head {
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.card-head-left { flex: 1; }
+.card-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--dim);
+  margin-bottom: 3px;
+  letter-spacing: 0.08em;
+}
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+.card-target {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.card-arrow {
+  font-size: 12px;
+  color: var(--dim);
+  transition: transform 0.2s;
+  margin-left: 8px;
+}
+.card.open .card-arrow { transform: rotate(90deg); }
+.card-body {
+  display: none;
+  border-top: 1px solid var(--border);
+  padding: 20px 18px;
+  gap: 20px;
+}
+.card.open .card-body { display: grid; grid-template-columns: 1fr 1fr; }
+@media(max-width:600px){ .card.open .card-body { grid-template-columns: 1fr; } }
+
+.col-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 12px;
+}
+
+/* TECH STACK */
+.stack { display: flex; flex-direction: column; gap: 6px; }
+.tech-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+}
+.tech-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+.tech-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--text);
+  margin-bottom: 1px;
+}
+.tech-why { font-size: 11px; color: var(--muted); line-height: 1.4; }
+.tech-badge {
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* RIGHT COLUMN */
+.info-block { margin-bottom: 18px; }
+.info-block:last-child { margin-bottom: 0; }
+.info-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 8px;
+}
+.idea-list { display: flex; flex-direction: column; gap: 5px; }
+.idea {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 6px 10px;
+  background: var(--bg3);
+  border-radius: 6px;
+  border-left: 2px solid var(--border2);
+  line-height: 1.4;
+}
+.idea strong { color: var(--text); display: block; font-size: 12px; font-weight: 500; margin-bottom: 1px; }
+
+.metric-box {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+.metric-box p { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.metric-box strong { color: var(--accent); font-weight: 500; }
+
+.resume-lines { display: flex; flex-direction: column; gap: 6px; }
+.resume-line {
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  padding: 8px 10px;
+  border-radius: 6px;
+  line-height: 1.5;
+}
+.resume-line.bad {
+  background: rgba(220,60,60,0.08);
+  border: 1px solid rgba(220,60,60,0.15);
+  color: #e88;
+  text-decoration: line-through;
+  text-decoration-color: rgba(220,60,60,0.4);
+}
+.resume-line.good {
+  background: rgba(60,180,100,0.08);
+  border: 1px solid rgba(60,180,100,0.15);
+  color: #8e8;
+}
+
+/* UNIVERSAL RULES */
+.rules-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+@media(max-width:600px){ .rules-grid { grid-template-columns: 1fr; } }
+.rule-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.rule-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--dim);
+  margin-bottom: 6px;
+  letter-spacing: 0.08em;
+}
+.rule-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.rule-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+/* SKILLS TABLE */
+.skills-table { width: 100%; border-collapse: collapse; }
+.skills-table th {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.skills-table td {
+  font-size: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  vertical-align: top;
+}
+.skills-table tr:last-child td { border-bottom: none; }
+.skills-table td:first-child {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text);
+}
+.pill {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin: 2px 2px 2px 0;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+}
+.priority-high { border-color: rgba(232,213,163,0.4); color: var(--accent); }
+.priority-med { border-color: rgba(163,196,232,0.4); color: var(--accent2); }
+.priority-low { border-color: rgba(163,232,196,0.4); color: var(--accent3); }
+
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <p class="hero-label">karan wakhare · 2025 · complete stack bible</p>
+  <h1 class="hero-title">Every project type.<br><span>Every tech stack.</span></h1>
+  <p class="hero-sub">Frontend · Backend · AI/ML · Web3 · Mobile · Open Source · Data — what to use, what to build, how to frame it on a resume.</p>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="showTab('frontend')">Frontend UI</button>
+  <button class="nav-btn" onclick="showTab('backend')">Backend</button>
+  <button class="nav-btn" onclick="showTab('ai')">AI / LLM</button>
+  <button class="nav-btn" onclick="showTab('ml')">ML / Data</button>
+  <button class="nav-btn" onclick="showTab('web3')">Web3</button>
+  <button class="nav-btn" onclick="showTab('fullstack')">Full Stack</button>
+  <button class="nav-btn" onclick="showTab('oss')">Open Source</button>
+  <button class="nav-btn" onclick="showTab('rules')">Universal Rules</button>
+  <button class="nav-btn" onclick="showTab('skills')">Skills Priority</button>
+</div>
+
+<!-- ═══════════ FRONTEND ═══════════ -->
+<div class="section active" id="tab-frontend">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(232,213,163,0.1)">🖥</div>
+    <div class="section-meta">
+      <p class="section-title" style="color:var(--accent)">Frontend / UI Projects</p>
+      <p class="section-desc">What companies like Figma, Linear, Notion, CRED, Razorpay hire for. You already have a head start here — but the stack needs upgrading.</p>
+    </div>
+  </div>
+  <div class="cards">
+
+    <div class="card" onclick="toggleCard(this)">
+      <div class="card-head">
+        <div class="card-head-left">
+          <p class="card-num">FRONTEND · 01</p>
+          <p class="card-title">Dashboard / Data Visualisation App</p>
+        </div>
+        <span class="card-target">CRED · Zepto · Razorpay</span>
+        <span class="card-arrow">▶</span>
+      </div>
+      <div class="card-body">
+        <div>
+          <p class="col-title">Tech Stack</p>
+          <div class="stack">
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">Next.js 14 (App Router)</p><p class="tech-why">Industry standard. Companies recognise it immediately.</p></div><span class="tech-badge" style="background:rgba(232,213,163,0.1);color:var(--accent)">must</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">TypeScript</p><p class="tech-why">All serious frontend roles require TypeScript now.</p></div><span class="tech-badge" style="background:rgba(232,213,163,0.1);color:var(--accent)">must</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent2)"></div><div><p class="tech-name">Recharts or Chart.js</p><p class="tech-why">Free charting libraries. Recharts integrates best with React.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent2)"></div><div><p class="tech-name">Tailwind CSS + shadcn/ui</p><p class="tech-why">shadcn is the free component library every startup uses.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">Supabase (free tier)</p><p class="tech-why">Free Postgres DB + real-time updates. Impresses interviewers.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">Vercel (deploy)</p><p class="tech-why">Free hosting. Live link on resume is non-negotiable.</p></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="info-block">
+            <p class="info-title">Project Ideas</p>
+            <div class="idea-list">
+              <div class="idea"><strong>GitHub Stats Dashboard</strong>Any user's GitHub stats with beautiful charts — repos, languages, streak. Gets shared virally.</div>
+              <div class="idea"><strong>IPL / Cricket Live Stats</strong>Real-time match stats dashboard. Indians love cricket. Gets thousands of users instantly during IPL.</div>
+              <div class="idea"><strong>Personal Finance Tracker</strong>Log expenses, visualise spending. Everyone needs this. "200 active users tracking ₹50L+ in expenses" is a real metric.</div>
+              <div class="idea"><strong>College Placement Tracker</strong>Visualise your college's placement data. Extremely shareable within your college network = fast users.</div>
+            </div>
+          </div>
+          <div class="info-block">
+            <p class="info-title">Resume metric to get</p>
+            <div class="metric-box">
+              <p>Share in relevant communities (r/india, college WhatsApp groups, Twitter). Target: <strong>200+ users, 1000+ page views/month</strong>. Add Vercel Analytics (free) to get these numbers automatically.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" onclick="toggleCard(this)">
+      <div class="card-head">
+        <div class="card-head-left">
+          <p class="card-num">FRONTEND · 02</p>
+          <p class="card-title">Component Library / Design System</p>
+        </div>
+        <span class="card-target">Figma · Linear · Notion · design-led</span>
+        <span class="card-arrow">▶</span>
+      </div>
+      <div class="card-body">
+        <div>
+          <p class="col-title">Tech Stack</p>
+          <div class="stack">
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">React + TypeScript</p><p class="tech-why">Component libraries must be in TypeScript for type safety.</p></div><span class="tech-badge" style="background:rgba(232,213,163,0.1);color:var(--accent)">must</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">Storybook</p><p class="tech-why">Standard tool to showcase component libraries. Free. Every design-led company knows it.</p></div><span class="tech-badge" style="background:rgba(232,213,163,0.1);color:var(--accent)">must</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent2)"></div><div><p class="tech-name">CSS Modules or Tailwind</p><p class="tech-why">Your choice. Tailwind is faster to write; CSS Modules are cleaner for libraries.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent2)"></div><div><p class="tech-name">npm publish</p><p class="tech-why">Publishing to npm means anyone can install it. "200 npm downloads/week" is a real metric.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">GitHub Actions (CI)</p><p class="tech-why">Auto-publish on push. Shows you understand DevOps basics.</p></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="info-block">
+            <p class="info-title">Project Ideas</p>
+            <div class="idea-list">
+              <div class="idea"><strong>Indian UI component library</strong>Components designed for Indian apps — UPI payment UI, Aadhaar input, Indian phone number field. Extremely niche and shareable.</div>
+              <div class="idea"><strong>Animated landing page components</strong>Pre-built hero sections, pricing tables, feature grids. Post on Twitter and watch developers use it.</div>
+            </div>
+          </div>
+          <div class="info-block">
+            <p class="info-title">Resume lines — before / after</p>
+            <div class="resume-lines">
+              <div class="resume-line bad">Built reusable React components with Tailwind</div>
+              <div class="resume-line good">Published npm package of 12 React components — 300+ weekly downloads, 80+ GitHub stars</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" onclick="toggleCard(this)">
+      <div class="card-head">
+        <div class="card-head-left">
+          <p class="card-num">FRONTEND · 03</p>
+          <p class="card-title">Interactive / Immersive Web Experience</p>
+        </div>
+        <span class="card-target">Creative agencies · gaming startups · portfolio differentiator</span>
+        <span class="card-arrow">▶</span>
+      </div>
+      <div class="card-body">
+        <div>
+          <p class="col-title">Tech Stack</p>
+          <div class="stack">
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">Next.js + TypeScript</p><p class="tech-why">Base framework as always.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">Framer Motion</p><p class="tech-why">Best animation library for React. Free. Companies love seeing smooth animations.</p></div><span class="tech-badge" style="background:rgba(232,213,163,0.1);color:var(--accent)">your strength</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent2)"></div><div><p class="tech-name">Three.js or React Three Fiber</p><p class="tech-why">3D in the browser. Rare skill. Even basic usage looks incredible on a portfolio.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent2)"></div><div><p class="tech-name">GSAP (free tier)</p><p class="tech-why">Industry standard for complex scroll animations. Huge in creative dev world.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">Canvas API or WebGL</p><p class="tech-why">For particle effects, generative art. Your iPod/GameBoy background makes this natural.</p></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="info-block">
+            <p class="info-title">Project Ideas</p>
+            <div class="idea-list">
+              <div class="idea"><strong>3D portfolio website</strong>Your own portfolio with Three.js elements. Gets shared on Twitter by design community every time — massive visibility.</div>
+              <div class="idea"><strong>Interactive music visualiser</strong>Your iPod background is perfect for this. Audio API + Canvas animations. Goes viral on Twitter with a screen recording.</div>
+              <div class="idea"><strong>Scroll-driven storytelling site</strong>Any topic with amazing scroll animations. "Built for a non-profit / college event" adds real-world context.</div>
+            </div>
+          </div>
+          <div class="info-block">
+            <p class="info-title">Resume metric to get</p>
+            <div class="metric-box"><p>Post a 30-second screen recording on Twitter. Tag <strong>#buildinpublic #webdev</strong>. Creative devs share heavily. "Featured in CSS-Tricks weekly" or "5K Twitter impressions" are both real metrics you can get.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ BACKEND ═══════════ -->
+<div class="section" id="tab-backend">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(163,196,232,0.1)">⚙</div>
+    <div class="section-meta">
+      <p class="section-title" style="color:var(--accent2)">Backend Projects</p>
+      <p class="section-desc">The gap in your current profile. Every serious company needs backend skills. You don't need to go deep — you need to be functional.</p>
+    </div>
+  </div>
+  <div class="cards">
+
+    <div class="card" onclick="toggleCard(this)">
+      <div class="card-head">
+        <div class="card-head-left">
+          <p class="card-num">BACKEND · 01</p>
+          <p class="card-title">REST API with Authentication</p>
+        </div>
+        <span class="card-target">Every company · absolute baseline</span>
+        <span class="card-arrow">▶</span>
+      </div>
+      <div class="card-body">
+        <div>
+          <p class="col-title">Tech Stack</p>
+          <div class="stack">
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent2)"></div><div><p class="tech-name">Node.js + Express or Hono</p><p class="tech-why">Hono is newer, faster, and impresses interviewers more than Express in 2025.</p></div><span class="tech-badge" style="background:rgba(163,196,232,0.1);color:var(--accent2)">must</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent2)"></div><div><p class="tech-name">PostgreSQL via Supabase (free)</p><p class="tech-why">Industry standard DB. Supabase gives you free Postgres + auth + realtime.</p></div><span class="tech-badge" style="background:rgba(163,196,232,0.1);color:var(--accent2)">must</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">JWT or Clerk (auth)</p><p class="tech-why">Clerk is free for small projects and handles auth completely. Put "implemented JWT auth" on resume.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">Prisma ORM</p><p class="tech-why">Type-safe database queries. All modern Node.js backend jobs use Prisma.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">Railway or Render (deploy)</p><p class="tech-why">Free backend hosting. Your API needs a live URL — not just GitHub code.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">Postman (API docs)</p><p class="tech-why">Document your API endpoints. Screenshot of Postman collection = "built documented REST API".</p></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="info-block">
+            <p class="info-title">Project Ideas</p>
+            <div class="idea-list">
+              <div class="idea"><strong>URL Shortener API</strong>Classic but effective. Add analytics (clicks per URL, geographic data). "API handling 10K+ requests/month" is achievable fast.</div>
+              <div class="idea"><strong>College event backend</strong>Build the backend for your college fest — ticketing, registrations, QR check-in. Real users built in. "Processed 500+ ticket registrations" is automatic.</div>
+              <div class="idea"><strong>Notification service</strong>API that sends WhatsApp/email/SMS notifications. Use Twilio free tier. Companies love seeing messaging API integration.</div>
+            </div>
+          </div>
+          <div class="info-block">
+            <p class="info-title">Resume lines — before / after</p>
+            <div class="resume-lines">
+              <div class="resume-line bad">Created backend using Node.js and Express</div>
+              <div class="resume-line good">Built REST API with JWT auth and PostgreSQL handling 8K+ monthly requests — deployed on Railway with 99.9% uptime</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" onclick="toggleCard(this)">
+      <div class="card-head">
+        <div class="card-head-left">
+          <p class="card-num">BACKEND · 02</p>
+          <p class="card-title">Real-time App (WebSockets)</p>
+        </div>
+        <span class="card-target">Zepto · gaming startups · collaborative tools</span>
+        <span class="card-arrow">▶</span>
+      </div>
+      <div class="card-body">
+        <div>
+          <p class="col-title">Tech Stack</p>
+          <div class="stack">
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent2)"></div><div><p class="tech-name">Node.js + Socket.io</p><p class="tech-why">Industry standard for real-time. Free. WebSocket knowledge is rare and valued.</p></div><span class="tech-badge" style="background:rgba(163,196,232,0.1);color:var(--accent2)">must</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent2)"></div><div><p class="tech-name">Redis (Upstash free tier)</p><p class="tech-why">For pub/sub in real-time apps. "Used Redis for real-time message queue" is a strong resume signal.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">Supabase Realtime</p><p class="tech-why">Simpler alternative — Supabase has built-in real-time subscriptions. Faster to build with.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">Next.js frontend</p><p class="tech-why">Pair with your existing Next.js frontend skills.</p></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="info-block">
+            <p class="info-title">Project Ideas</p>
+            <div class="idea-list">
+              <div class="idea"><strong>Multiplayer quiz / Kahoot clone</strong>Real-time quiz with rooms. Host it during college events — 50+ simultaneous users instantly.</div>
+              <div class="idea"><strong>Live coding interview tool</strong>Two people edit code simultaneously. Extremely relevant — every dev company will relate to this.</div>
+              <div class="idea"><strong>Real-time poll / voting app</strong>Display live results as votes come in. Used at college events or conferences. Easy to get real users.</div>
+            </div>
+          </div>
+          <div class="info-block">
+            <p class="info-title">Resume metric to get</p>
+            <div class="metric-box"><p>Host a live quiz session during a college event. <strong>"Supported 80+ concurrent real-time connections"</strong> is a real metric you can get in one session.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ AI / LLM ═══════════ -->
+<div class="section" id="tab-ai">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(197,163,232,0.1)">◈</div>
+    <div class="section-meta">
+      <p class="section-title" style="color:var(--accent5)">AI / LLM Projects</p>
+      <p class="section-desc">The highest-value niche right now. Combining your existing frontend taste with LLM integration is your fastest path to standing out. This is the main bet.</p>
+    </div>
+  </div>
+  <div class="cards">
+
+    <div class="card" onclick="toggleCard(this)">
+      <div class="card-head">
+        <div class="card-head-left">
+          <p class="card-num">AI · 01</p>
+          <p class="card-title">RAG App (Chat with Documents/Data)</p>
+        </div>
+        <span class="card-target">AI startups · YC companies · B2B SaaS</span>
+        <span class="card-arrow">▶</span>
+      </div>
+      <div class="card-body">
+        <div>
+          <p class="col-title">Tech Stack</p>
+          <div class="stack">
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent5)"></div><div><p class="tech-name">Next.js + TypeScript</p><p class="tech-why">Your base stack. Always.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent5)"></div><div><p class="tech-name">Vercel AI SDK</p><p class="tech-why">Free. The standard for AI apps in Next.js. Streaming responses, useChat hook, tool calling.</p></div><span class="tech-badge" style="background:rgba(197,163,232,0.1);color:var(--accent5)">must</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent5)"></div><div><p class="tech-name">OpenAI API or Gemini API</p><p class="tech-why">Both have free tiers. Gemini 1.5 Flash is fully free. Start with Gemini to save costs.</p></div><span class="tech-badge" style="background:rgba(197,163,232,0.1);color:var(--accent5)">must</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">Supabase pgvector (free)</p><p class="tech-why">Vector database built into Supabase free tier. Store embeddings for semantic search.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">LangChain.js or LlamaIndex</p><p class="tech-why">Optional but good to know. These handle chunking, embedding, retrieval pipeline.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">Uploadthing (free file upload)</p><p class="tech-why">Free file upload for PDFs and docs. Pairs with RAG apps perfectly.</p></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="info-block">
+            <p class="info-title">Project Ideas — do these, not generic chat apps</p>
+            <div class="idea-list">
+              <div class="idea"><strong>JEE/UPSC Question Bank AI</strong>Upload past question papers → ask questions → AI answers with sources. Every student in India is your user. Massive distribution.</div>
+              <div class="idea"><strong>Chat with any GitHub repo</strong>Paste a GitHub URL → AI explains the codebase, answers questions about it. Developer tool — gets shared on Twitter instantly.</div>
+              <div class="idea"><strong>Resume Roaster</strong>Upload resume → AI gives brutal honest feedback with specific improvements. Extremely shareable. Gets used and retweeted.</div>
+              <div class="idea"><strong>College syllabus AI</strong>Upload your college syllabus → AI creates a study plan, quiz, flashcards. Specific to Indian college students. Easy to get 500+ users.</div>
+            </div>
+          </div>
+          <div class="info-block">
+            <p class="info-title">Resume lines — before / after</p>
+            <div class="resume-lines">
+              <div class="resume-line bad">Built an AI chatbot using OpenAI API</div>
+              <div class="resume-line good">Built RAG-powered study tool used by 400+ students — processes PDFs via vector embeddings, achieving 85% query relevance score</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" onclick="toggleCard(this)">
+      <div class="card-head">
+        <div class="card-head-left">
+          <p class="card-num">AI · 02</p>
+          <p class="card-title">AI Agent / Automation Tool</p>
+        </div>
+        <span class="card-target">YC startups · automation companies · Anthropic · OpenAI ecosystem</span>
+        <span class="card-arrow">▶</span>
+      </div>
+      <div class="card-body">
+        <div>
+          <p class="col-title">Tech Stack</p>
+          <div class="stack">
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent5)"></div><div><p class="tech-name">Vercel AI SDK (tool calling)</p><p class="tech-why">Tool calling = agents. Teach AI to take actions, not just respond. This is the current frontier.</p></div><span class="tech-badge" style="background:rgba(197,163,232,0.1);color:var(--accent5)">hot skill</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent5)"></div><div><p class="tech-name">Claude API or OpenAI API</p><p class="tech-why">Claude is better at multi-step reasoning tasks. OpenAI is more well-known on resumes.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">Browserbase or Playwright</p><p class="tech-why">Web scraping + browser automation. Agents need to take actions in the browser.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">GitHub API / Notion API / Slack API</p><p class="tech-why">Connect AI agents to real tools people use daily. Much more impressive than standalone chat.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">Inngest (free workflow orchestration)</p><p class="tech-why">Free background job runner. For long-running AI tasks that can't fit in a single HTTP request.</p></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="info-block">
+            <p class="info-title">Project Ideas</p>
+            <div class="idea-list">
+              <div class="idea"><strong>AI LinkedIn outreach agent</strong>Input a job description → AI writes personalised cold DMs for 10 people at that company. Extremely useful. Every jobseeker wants this.</div>
+              <div class="idea"><strong>AI PR reviewer</strong>Connect GitHub → auto-reviews pull requests with specific suggestions. Post on r/programming. Developer tool that gets used immediately.</div>
+              <div class="idea"><strong>Daily digest agent</strong>Agent reads your Twitter bookmarks + Notion notes + emails → sends you a daily summary. Personal productivity tool. Build for yourself, share publicly.</div>
+            </div>
+          </div>
+          <div class="info-block">
+            <p class="info-title">Resume metric to get</p>
+            <div class="metric-box"><p>For agent projects: <strong>"Automated X workflow reducing Y time by Z%"</strong> works even for personal use. "Automated my daily news reading, saving 45 min/day — adopted by 30+ users" is a real and impressive metric.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" onclick="toggleCard(this)">
+      <div class="card-head">
+        <div class="card-head-left">
+          <p class="card-num">AI · 03</p>
+          <p class="card-title">Multimodal AI App (Vision + Text)</p>
+        </div>
+        <span class="card-target">Product companies · design tools · consumer AI apps</span>
+        <span class="card-arrow">▶</span>
+      </div>
+      <div class="card-body">
+        <div>
+          <p class="col-title">Tech Stack</p>
+          <div class="stack">
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent5)"></div><div><p class="tech-name">Gemini 1.5 Flash (free)</p><p class="tech-why">Google's multimodal model is completely free. Processes images, video, and text.</p></div><span class="tech-badge" style="background:rgba(197,163,232,0.1);color:var(--accent5)">free</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent5)"></div><div><p class="tech-name">Next.js + Vercel AI SDK</p><p class="tech-why">Handles multimodal inputs natively with the latest AI SDK.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">Uploadthing or Cloudinary (free)</p><p class="tech-why">Image upload and processing. Cloudinary free tier is generous.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">React Dropzone</p><p class="tech-why">Clean drag-and-drop file uploads. Small library, big UX improvement.</p></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="info-block">
+            <p class="info-title">Project Ideas — this is where your design eye wins</p>
+            <div class="idea-list">
+              <div class="idea"><strong>UI Roast</strong>Screenshot any website → AI gives brutal UX/design feedback. Gets shared in design communities constantly. You understand UI — this is your superpower.</div>
+              <div class="idea"><strong>Handwriting to digital notes</strong>Photo of handwritten notes → clean formatted text + summary. Every student needs this. Share in college WhatsApp groups.</div>
+              <div class="idea"><strong>Food photo → recipe + nutrition</strong>Photo of any Indian dish → ingredients, recipe, macros. Extremely viral in Indian content communities.</div>
+            </div>
+          </div>
+          <div class="info-block">
+            <p class="info-title">Resume lines — before / after</p>
+            <div class="resume-lines">
+              <div class="resume-line bad">Integrated Gemini API for image analysis</div>
+              <div class="resume-line good">Built multimodal AI tool processing 500+ image uploads — UI Roaster used by 300+ designers with avg 4.8/5 rating</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ ML / DATA ═══════════ -->
+<div class="section" id="tab-ml">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(163,232,196,0.1)">◉</div>
+    <div class="section-meta">
+      <p class="section-title" style="color:var(--accent3)">ML / Data Science Projects</p>
+      <p class="section-desc">If you want to go deeper than just calling APIs. These projects show you understand what's happening inside AI, not just how to use it. Opens doors at research teams and ML-focused companies.</p>
+    </div>
+  </div>
+  <div class="cards">
+
+    <div class="card" onclick="toggleCard(this)">
+      <div class="card-head">
+        <div class="card-head-left">
+          <p class="card-num">ML · 01</p>
+          <p class="card-title">Fine-tuned Model or Custom Classifier</p>
+        </div>
+        <span class="card-target">AI research teams · Sarvam AI · Krutrim · ML startups</span>
+        <span class="card-arrow">▶</span>
+      </div>
+      <div class="card-body">
+        <div>
+          <p class="col-title">Tech Stack</p>
+          <div class="stack">
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">Python</p><p class="tech-why">The only language for ML. You already have it in your skills.</p></div><span class="tech-badge" style="background:rgba(163,232,196,0.1);color:var(--accent3)">must</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">HuggingFace Transformers (free)</p><p class="tech-why">Access to thousands of pre-trained models. Fine-tune any model on your data for free.</p></div><span class="tech-badge" style="background:rgba(163,232,196,0.1);color:var(--accent3)">must</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">Google Colab (free GPU)</p><p class="tech-why">Free T4 GPU for training. No setup needed. Every ML project starts here.</p></div><span class="tech-badge" style="background:rgba(163,232,196,0.1);color:var(--accent3)">free</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">Gradio or Streamlit</p><p class="tech-why">Turn any ML model into a web app in 10 lines. Free hosting on HuggingFace Spaces.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">Weights & Biases (free tier)</p><p class="tech-why">ML experiment tracking. "Used W&B for experiment tracking" is a real industry skill signal.</p></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="info-block">
+            <p class="info-title">Project Ideas</p>
+            <div class="idea-list">
+              <div class="idea"><strong>Indian language sentiment analyser</strong>Fine-tune a model on Hindi/Marathi tweets for sentiment analysis. India-specific ML = rare and impressive. Deploy on HuggingFace Spaces free.</div>
+              <div class="idea"><strong>Code review classifier</strong>Model that classifies code review comments as "blocking" / "suggestion" / "nitpick". Practical, novel, shareable with developer communities.</div>
+              <div class="idea"><strong>Resume scorer</strong>Fine-tune a model to score resumes against job descriptions. Deeply relevant to your own journey — build the tool you need.</div>
+            </div>
+          </div>
+          <div class="info-block">
+            <p class="info-title">Resume metric to get</p>
+            <div class="metric-box"><p>Deploy on HuggingFace Spaces. It auto-shows <strong>total runs/uses</strong>. Get your college batchmates to use it. "Model achieving 91% accuracy, 200+ runs on HuggingFace Spaces" is a real achievable metric.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" onclick="toggleCard(this)">
+      <div class="card-head">
+        <div class="card-head-left">
+          <p class="card-num">ML · 02</p>
+          <p class="card-title">Data Pipeline + Analysis Project</p>
+        </div>
+        <span class="card-target">Zepto · Swiggy · data-driven product companies</span>
+        <span class="card-arrow">▶</span>
+      </div>
+      <div class="card-body">
+        <div>
+          <p class="col-title">Tech Stack</p>
+          <div class="stack">
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">Python + Pandas + NumPy</p><p class="tech-why">The baseline for any data work. Know these well.</p></div><span class="tech-badge" style="background:rgba(163,232,196,0.1);color:var(--accent3)">must</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">Jupyter Notebook / Google Colab</p><p class="tech-why">Document your analysis inline. Notebooks are how data work gets presented.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">Plotly or Matplotlib</p><p class="tech-why">Interactive charts for data viz. Plotly looks more impressive in demos.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">Streamlit (free Streamlit Cloud)</p><p class="tech-why">Turn your data analysis into a shareable web app. Free hosting. Gets actual users.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent2)"></div><div><p class="tech-name">SQLite or Supabase</p><p class="tech-why">Store and query your datasets. Shows you understand data storage, not just analysis.</p></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="info-block">
+            <p class="info-title">Project Ideas</p>
+            <div class="idea-list">
+              <div class="idea"><strong>IPL data analysis</strong>13 years of IPL data on Kaggle (free). Analyse player performance, predict match outcomes. Cricket data = instant Indian audience.</div>
+              <div class="idea"><strong>Placement data analyser</strong>Scrape/collect placement data from LinkedIn for your college or nearby colleges. "Analysed 500+ placement records to identify top hiring trends" — extremely shareable with students.</div>
+              <div class="idea"><strong>Startup funding tracker India</strong>Aggregate data on Indian startup funding rounds (Crunchbase has free tier). Find patterns, visualise trends. Gets shared by startup media.</div>
+            </div>
+          </div>
+          <div class="info-block">
+            <p class="info-title">Resume lines — before / after</p>
+            <div class="resume-lines">
+              <div class="resume-line bad">Analysed data using Python and Pandas</div>
+              <div class="resume-line good">Built IPL analytics dashboard processing 13 years of match data — 800+ users, featured in r/Cricket with 2K upvotes</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ WEB3 ═══════════ -->
+<div class="section" id="tab-web3">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(232,196,163,0.1)">⬡</div>
+    <div class="section-meta">
+      <p class="section-title" style="color:var(--accent6)">Web3 / Blockchain Projects</p>
+      <p class="section-desc">This is what Aditya Jha specialised in. High barrier to entry = fewer competitors. If you want to go this route, it's a strong differentiation play. Optional — but powerful.</p>
+    </div>
+  </div>
+  <div class="cards">
+
+    <div class="card" onclick="toggleCard(this)">
+      <div class="card-head">
+        <div class="card-head-left">
+          <p class="card-num">WEB3 · 01</p>
+          <p class="card-title">dApp (Decentralised Application)</p>
+        </div>
+        <span class="card-target">Crypto startups · Solana ecosystem · DeFi companies</span>
+        <span class="card-arrow">▶</span>
+      </div>
+      <div class="card-body">
+        <div>
+          <p class="col-title">Tech Stack</p>
+          <div class="stack">
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent6)"></div><div><p class="tech-name">Next.js + TypeScript</p><p class="tech-why">Same frontend stack. Web3 frontend is just regular frontend + wallet connection.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent6)"></div><div><p class="tech-name">Solidity (Ethereum) or Rust (Solana)</p><p class="tech-why">Solidity is easier to start. Solana pays better. Pick based on which community you join first.</p></div><span class="tech-badge" style="background:rgba(232,196,163,0.1);color:var(--accent6)">new skill</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent6)"></div><div><p class="tech-name">Hardhat or Foundry (free)</p><p class="tech-why">Smart contract development + testing framework. Foundry is newer and preferred in 2025.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">RainbowKit or Wagmi</p><p class="tech-why">Wallet connection UI. Handles MetaMask, WalletConnect etc. Free library.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">Alchemy or Infura (free tier)</p><p class="tech-why">Blockchain node provider. Free tier is enough for portfolio projects.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">OpenZeppelin (free)</p><p class="tech-why">Standard smart contract templates. Using OpenZeppelin shows security awareness.</p></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="info-block">
+            <p class="info-title">Project Ideas</p>
+            <div class="idea-list">
+              <div class="idea"><strong>On-chain voting system</strong>College election or community poll on blockchain. Transparent and tamper-proof. Easy to get 100+ real transactions on testnet.</div>
+              <div class="idea"><strong>NFT certificate platform</strong>Issue course completion certificates as NFTs. Colleges love this. "Issued 200+ NFT certificates" is a metric you can get from one event.</div>
+              <div class="idea"><strong>Micro-payment tip jar</strong>Creators get tipped in crypto via a simple widget. Build it on Solana devnet first, then mainnet.</div>
+            </div>
+          </div>
+          <div class="info-block">
+            <p class="info-title">How to get into this ecosystem fast</p>
+            <div class="metric-box"><p>Join <strong>Solana Superteam India</strong> Discord immediately. They give grants of $500–$5000 for building on Solana. This is exactly how Aditya got started. The community also connects you directly to internships.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ FULL STACK ═══════════ -->
+<div class="section" id="tab-fullstack">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(163,196,232,0.08)">◫</div>
+    <div class="section-meta">
+      <p class="section-title" style="color:var(--accent2)">Full Stack SaaS Projects</p>
+      <p class="section-desc">The most impressive project type for Indian product companies. A full working product — frontend + backend + auth + payments + users. Shows you can ship an entire product alone.</p>
+    </div>
+  </div>
+  <div class="cards">
+
+    <div class="card" onclick="toggleCard(this)">
+      <div class="card-head">
+        <div class="card-head-left">
+          <p class="card-num">FULLSTACK · 01</p>
+          <p class="card-title">SaaS Product with Paying Users</p>
+        </div>
+        <span class="card-target">Every company · the highest-impact resume project possible</span>
+        <span class="card-arrow">▶</span>
+      </div>
+      <div class="card-body">
+        <div>
+          <p class="col-title">The Complete Stack</p>
+          <div class="stack">
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent2)"></div><div><p class="tech-name">Next.js 14 + TypeScript</p><p class="tech-why">Frontend + API routes. One codebase for everything.</p></div><span class="tech-badge" style="background:rgba(163,196,232,0.1);color:var(--accent2)">core</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent2)"></div><div><p class="tech-name">Supabase (DB + Auth + Storage)</p><p class="tech-why">Free tier covers everything for a portfolio SaaS. Auth, database, file storage in one.</p></div><span class="tech-badge" style="background:rgba(163,196,232,0.1);color:var(--accent2)">core</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent5)"></div><div><p class="tech-name">Vercel AI SDK + LLM of choice</p><p class="tech-why">The AI feature that justifies charging money for your SaaS.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">Razorpay or LemonSqueezy</p><p class="tech-why">Razorpay is built for India. LemonSqueezy is simpler globally. Adds "handled payments" to your resume.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">Resend (free email API)</p><p class="tech-why">Transactional emails. Free up to 100/day. "Implemented email notification system" is a resume signal.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">Vercel Analytics (free)</p><p class="tech-why">Automatic user metrics. Shows you how many people use your app — feeds your resume numbers.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">Sentry (free error tracking)</p><p class="tech-why">"Implemented error monitoring with Sentry" shows production engineering awareness. Rare in student projects.</p></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="info-block">
+            <p class="info-title">Project Ideas — AI SaaS that can actually make money</p>
+            <div class="idea-list">
+              <div class="idea"><strong>AI Resume Builder for Indian students</strong>Generate ATS-optimised resumes. Free tier (3 resumes) + paid tier (unlimited). Razorpay integration. You understand this problem deeply.</div>
+              <div class="idea"><strong>AI mock interview tool</strong>Text-based interview practice with AI feedback. ₹99/month. Indian students will pay. Build the product you wish existed when you started.</div>
+              <div class="idea"><strong>Automated LinkedIn post generator</strong>Input your work → AI generates LinkedIn post in your style. ₹49/month. Every dev/student who wants to build in public needs this.</div>
+            </div>
+          </div>
+          <div class="info-block">
+            <p class="info-title">The ultimate resume metric</p>
+            <div class="metric-box"><p>Even ₹500 of real revenue is <strong>"Built SaaS generating ₹500+ in revenue with 50 registered users"</strong>. Real money from real users is the single most impressive metric any student project can show. Companies know how hard this is.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ OPEN SOURCE ═══════════ -->
+<div class="section" id="tab-oss">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(163,232,196,0.08)">○</div>
+    <div class="section-meta">
+      <p class="section-title" style="color:var(--accent3)">Open Source Contributions</p>
+      <p class="section-desc">The most underrated resume strategy. One accepted PR to a well-known repo carries more weight than 5 personal projects. Companies actively look for open source contributions.</p>
+    </div>
+  </div>
+  <div class="cards">
+
+    <div class="card" onclick="toggleCard(this)">
+      <div class="card-head">
+        <div class="card-head-left">
+          <p class="card-num">OSS · 01</p>
+          <p class="card-title">Contribute to Existing Projects</p>
+        </div>
+        <span class="card-target">All companies · shows collaboration + real codebase experience</span>
+        <span class="card-arrow">▶</span>
+      </div>
+      <div class="card-body">
+        <div>
+          <p class="col-title">Where to contribute (easy entry)</p>
+          <div class="stack">
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">shadcn/ui</p><p class="tech-why">Your most natural contribution. You use it. Fix docs, add examples, fix small bugs. Every startup knows this repo.</p></div><span class="tech-badge" style="background:rgba(163,232,196,0.1);color:var(--accent3)">start here</span></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent3)"></div><div><p class="tech-name">Vercel AI SDK</p><p class="tech-why">Docs improvements, example apps, bug reports with fixes. Anthropic and Vercel employees will see your PR.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">github.com/sindresorhus/awesome lists</p><p class="tech-why">Add your project to the relevant "awesome-nextjs" or "awesome-ai-tools" list. Accepted in 24 hours usually. Counts as open source contribution.</p></div></div>
+            <div class="tech-item"><div class="tech-dot" style="background:var(--accent)"></div><div><p class="tech-name">Any repo with "good first issue" label</p><p class="tech-why">GitHub search: "good first issue" + language:TypeScript. Fix it, submit PR, done. Even one accepted PR changes your resume.</p></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="info-block">
+            <p class="info-title">How to find easy first issues</p>
+            <div class="idea-list">
+              <div class="idea"><strong>github.com/explore</strong>Filter by "good first issue" and TypeScript/JavaScript. New issues added daily.</div>
+              <div class="idea"><strong>goodfirstissue.dev</strong>Curated list of beginner-friendly issues across all repos. Filter by language.</div>
+              <div class="idea"><strong>contrib.rocks</strong>Shows repos that recently got popular — prime time to contribute before it gets crowded.</div>
+            </div>
+          </div>
+          <div class="info-block">
+            <p class="info-title">Resume lines — before / after</p>
+            <div class="resume-lines">
+              <div class="resume-line bad">Familiar with open source development</div>
+              <div class="resume-line good">Contributed 3 PRs to shadcn/ui (2.1K GitHub stars) — fixed accessibility issues and added TypeScript examples</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════ UNIVERSAL RULES ═══════════ -->
+<div class="section" id="tab-rules">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(232,160,163,0.1)">▲</div>
+    <div class="section-meta">
+      <p class="section-title" style="color:var(--accent4)">Universal Rules — Every Project</p>
+      <p class="section-desc">These apply regardless of what type of project you build. Breaking any of these is why good projects still get ignored by recruiters.</p>
+    </div>
+  </div>
+  <div class="rules-grid">
+    <div class="rule-card">
+      <p class="rule-num">RULE 01</p>
+      <p class="rule-title" style="color:var(--accent)">Always live. Always.</p>
+      <p class="rule-desc">Every project must have a working demo URL. Vercel, Netlify, HuggingFace Spaces, Railway — free options exist for every project type. A GitHub link with no demo does not exist to a recruiter.</p>
+    </div>
+    <div class="rule-card">
+      <p class="rule-num">RULE 02</p>
+      <p class="rule-title" style="color:var(--accent2)">Numbers, not descriptions</p>
+      <p class="rule-desc">Every bullet on your resume needs a number. Users, requests, percentage improvement, stars, downloads, revenue — anything measurable. "Built X" → "Built X used by N people / achieving Y metric." No exceptions.</p>
+    </div>
+    <div class="rule-card">
+      <p class="rule-num">RULE 03</p>
+      <p class="rule-title" style="color:var(--accent3)">README is your sales page</p>
+      <p class="rule-desc">Every repo needs: project name + one sentence, live demo link (top of README), screenshot or GIF, tech stack list, how to run locally. Repos without READMEs look abandoned. With a good README they look professional.</p>
+    </div>
+    <div class="rule-card">
+      <p class="rule-num">RULE 04</p>
+      <p class="rule-title" style="color:var(--accent5)">Ship fast, iterate publicly</p>
+      <p class="rule-desc">Tweet about it on day 1. Not when it's perfect — on day 1. "Building X, here's what I have so far" gets followers and feedback. Mufeed built Devika in 20 hours and posted it. Timing and speed beat polish.</p>
+    </div>
+    <div class="rule-card">
+      <p class="rule-num">RULE 05</p>
+      <p class="rule-num" style="color:var(--accent6)"></p>
+      <p class="rule-title" style="color:var(--accent6)">Know your stack decisions</p>
+      <p class="rule-desc">For every technology you use, be able to answer: "Why did you choose this over X?" Why Next.js and not Vite? Why Supabase and not Firebase? Why Vercel AI SDK and not raw fetch? These are the exact questions every interview asks.</p>
+    </div>
+    <div class="rule-card">
+      <p class="rule-num">RULE 06</p>
+      <p class="rule-title" style="color:var(--accent4)">One project at a time</p>
+      <p class="rule-desc">Never have two projects in progress simultaneously. Finish, deploy, share, get users, add to resume — THEN start the next one. Half-finished projects on GitHub are worse than no projects. Completion is the skill.</p>
+    </div>
+    <div class="rule-card">
+      <p class="rule-num">RULE 07</p>
+      <p class="rule-title" style="color:var(--accent)">GitHub green every day</p>
+      <p class="rule-desc">The contribution graph is visible on your profile. Companies open it. A graph with daily commits signals consistency and dedication — regardless of what the commits are. Even a README edit counts. One commit per day, minimum.</p>
+    </div>
+    <div class="rule-card">
+      <p class="rule-num">RULE 08</p>
+      <p class="rule-title" style="color:var(--accent2)">Real users over complex tech</p>
+      <p class="rule-desc">50 people using a simple CRUD app beats a sophisticated ML system nobody uses. Companies hire for impact, not complexity. Always optimise for getting real users on your project over making the technology more interesting.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SKILLS PRIORITY ═══════════ -->
+<div class="section" id="tab-skills">
+  <div class="section-header">
+    <div class="section-icon" style="background:rgba(232,213,163,0.1)">◈</div>
+    <div class="section-meta">
+      <p class="section-title" style="color:var(--accent)">Skills Priority — What to Learn When</p>
+      <p class="section-desc">Not all skills are equal. This is the exact sequence to add to your resume, ranked by hiring impact vs learning time. Learn in this order.</p>
+    </div>
+  </div>
+  <table class="skills-table">
+    <thead>
+      <tr>
+        <th>Skill</th>
+        <th>Priority</th>
+        <th>Why</th>
+        <th>Free Resource</th>
+        <th>Time to functional</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Next.js 14 (App Router)</td>
+        <td><span class="pill priority-high">learn now</span></td>
+        <td style="color:var(--muted)">Every startup uses it. Direct upgrade from your existing React.</td>
+        <td style="color:var(--muted)">nextjs.org/learn (official, free)</td>
+        <td style="color:var(--muted)">1 week</td>
+      </tr>
+      <tr>
+        <td>TypeScript basics</td>
+        <td><span class="pill priority-high">learn now</span></td>
+        <td style="color:var(--muted)">Required at all serious companies. Just typed JavaScript.</td>
+        <td style="color:var(--muted)">typescriptlang.org/docs/handbook</td>
+        <td style="color:var(--muted)">3 days</td>
+      </tr>
+      <tr>
+        <td>Vercel AI SDK</td>
+        <td><span class="pill priority-high">learn now</span></td>
+        <td style="color:var(--muted)">Standard AI app development. Your main differentiator.</td>
+        <td style="color:var(--muted)">sdk.vercel.ai/docs</td>
+        <td style="color:var(--muted)">2–3 days</td>
+      </tr>
+      <tr>
+        <td>Gemini API (free LLM)</td>
+        <td><span class="pill priority-high">learn now</span></td>
+        <td style="color:var(--muted)">Free tier, multimodal, generous limits. Build AI apps at zero cost.</td>
+        <td style="color:var(--muted)">ai.google.dev/docs</td>
+        <td style="color:var(--muted)">1 day</td>
+      </tr>
+      <tr>
+        <td>Supabase (DB + Auth)</td>
+        <td><span class="pill priority-high">learn now</span></td>
+        <td style="color:var(--muted)">Free database + auth. Every real app needs data persistence.</td>
+        <td style="color:var(--muted)">supabase.com/docs</td>
+        <td style="color:var(--muted)">2–3 days</td>
+      </tr>
+      <tr>
+        <td>Git (properly)</td>
+        <td><span class="pill priority-high">this week</span></td>
+        <td style="color:var(--muted)">Branching, meaningful commits, PR workflow. Companies see your GitHub.</td>
+        <td style="color:var(--muted)">learngitbranching.js.org</td>
+        <td style="color:var(--muted)">2 days</td>
+      </tr>
+      <tr>
+        <td>Node.js / Next.js API routes</td>
+        <td><span class="pill priority-med">month 2</span></td>
+        <td style="color:var(--muted)">Basic backend to call AI APIs securely and store data.</td>
+        <td style="color:var(--muted)">nodejs.dev/learn (official)</td>
+        <td style="color:var(--muted)">1 week</td>
+      </tr>
+      <tr>
+        <td>PostgreSQL basics (via Supabase)</td>
+        <td><span class="pill priority-med">month 2</span></td>
+        <td style="color:var(--muted)">Most used database in industry. Basic SQL = instantly hireable.</td>
+        <td style="color:var(--muted)">supabase.com/docs/guides/database</td>
+        <td style="color:var(--muted)">1 week</td>
+      </tr>
+      <tr>
+        <td>Python + Pandas (basics)</td>
+        <td><span class="pill priority-med">month 3</span></td>
+        <td style="color:var(--muted)">Opens ML and data projects. You already have Python — just add Pandas.</td>
+        <td style="color:var(--muted)">kaggle.com/learn (free)</td>
+        <td style="color:var(--muted)">1 week</td>
+      </tr>
+      <tr>
+        <td>RAG / LangChain.js</td>
+        <td><span class="pill priority-med">month 3</span></td>
+        <td style="color:var(--muted)">Chat with documents apps. Extremely in-demand at AI startups.</td>
+        <td style="color:var(--muted)">js.langchain.com/docs/tutorials</td>
+        <td style="color:var(--muted)">1 week</td>
+      </tr>
+      <tr>
+        <td>DSA basics (Striver A2Z)</td>
+        <td><span class="pill priority-med">parallel · 1/day</span></td>
+        <td style="color:var(--muted)">Indian product companies (CRED, Zepto) test this. 30 mins/day consistently.</td>
+        <td style="color:var(--muted)">takeuforward.org (free sheet)</td>
+        <td style="color:var(--muted)">Ongoing</td>
+      </tr>
+      <tr>
+        <td>Docker basics</td>
+        <td><span class="pill priority-low">month 4+</span></td>
+        <td style="color:var(--muted)">Good to know for backend roles. Not urgent for frontend/AI path.</td>
+        <td style="color:var(--muted)">docker.com/101-tutorial</td>
+        <td style="color:var(--muted)">3 days</td>
+      </tr>
+      <tr>
+        <td>Solidity / Web3</td>
+        <td><span class="pill priority-low">if you choose Web3</span></td>
+        <td style="color:var(--muted)">Only if you go Aditya's path. High learning curve, high reward.</td>
+        <td style="color:var(--muted)">cryptozombies.io (free)</td>
+        <td style="color:var(--muted)">2–3 weeks</td>
+      </tr>
+      <tr>
+        <td>HuggingFace / Fine-tuning</td>
+        <td><span class="pill priority-low">month 5+</span></td>
+        <td style="color:var(--muted)">If you want to go deeper into ML. Not needed for product engineer roles.</td>
+        <td style="color:var(--muted)">huggingface.co/learn</td>
+        <td style="color:var(--muted)">2 weeks</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+function showTab(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+function toggleCard(card) {
+  card.classList.toggle('open');
+}
+</script>
+</body>
+</html>
