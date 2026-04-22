@@ -1,6 +1,6 @@
 # Implementation Plan: Archive Room Intelligence Phase
 
-Connect the "Data Nexus" UI to a real-time agent reasoning engine driven by FastAPI and Gemini.
+Connect the "The Archive Room" UI to a real-time agent reasoning engine driven by FastAPI and Gemini.
 
 ## User Review Required
 

@@ -1,7 +1,7 @@
 <div align="center">
 
 # 🏛️ THE ARCHIVE ROOM
-### **The Autonomous Data Nexus & AI Memory Palace**
+### **The Archive Room**
 
 ![The Archive Room Hero](_legacy_archive/documentation/archive_room_hero_mockup.png)
 
@@ -36,11 +36,11 @@ Zero-latency WebSocket synchronization between your FastAPI backend and the Next
 - **Agent Swarm Management**: Seamlessly monitor multiple sub-agents in a shared isometric space.
 
 ### 🎨 Elite Design System (LOCKED)
-A bespoke, high-contrast **"Data Nexus"** aesthetic built on **Tailwind CSS v4**. Featuring glassmorphism HUDs, professional pixel-art assets, and a 60FPS rendering engine optimized for smooth panning and zooming.
+A bespoke, high-contrast aesthetic built on **Tailwind CSS v4**. Featuring glassmorphism HUDs, professional pixel-art assets, and a 60FPS rendering engine optimized for smooth panning and zooming.
 
 ---
 
-## 🏗️ Architecture: The Data Nexus
+## 🏗️ Architecture: The Archive Room
 
 ```mermaid
 graph TD

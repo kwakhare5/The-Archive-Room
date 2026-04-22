@@ -78,7 +78,7 @@ This project maintains its pulse via:
 
 # The Archive Room — Compressed Reference
 
-Standalone React web app: pixel-art "Data Nexus" room where AI agent operations (RAG search, code generation, reasoning, idle) are visualized as physical character movements and furniture interactions.
+Standalone React web app: pixel-art "The Archive Room" where AI agent operations (RAG search, code generation, reasoning, idle) are visualized as physical character movements and furniture interactions.
 
 ## Vision & Concept
 

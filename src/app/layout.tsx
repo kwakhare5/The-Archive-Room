@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "The Archive Room | Data Nexus",
+  title: "The Archive Room",
   description: "A high-performance pixel-art engine for visualizing AI agent operations.",
 };
 

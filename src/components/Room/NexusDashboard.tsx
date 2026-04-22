@@ -135,7 +135,7 @@ export default function NexusDashboard() {
   if (!layoutReady) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-bg font-pixel text-base text-text">
-        INITIATING DATA NEXUS...
+        INITIATING THE ARCHIVE ROOM...
       </div>
     );
   }
