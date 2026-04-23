@@ -75,3 +75,16 @@ We have finalized the transition to "The Archive Room" by implementing strict en
 
 ---
 *Last Updated: 2026-04-22*
+
+## Emergency Revert & Cleanup (2026-04-23)
+
+As per user request, the repository was hard-reset to commit `a193640a`. 
+
+### 🧹 Cleanup Operations
+- **Hard Reset**: Reverted to `a193640a Archive Pulse: 2026-04-22 21:49:22 [Checkpoint]`.
+- **Workspace Purge**: Removed untracked experimental directories including `backend/` and `scripts/debug-seats.mjs`.
+- **Baseline Restoration**: Restored the verified stable state of the "Memory Palace" engine.
+
+### 🧪 Status
+- **Working Directory**: Clean.
+- **Head Status**: `a193640a`.

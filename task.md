@@ -44,3 +44,8 @@
     - [x] Standardize `localStorage` keys to `archive-room-config`
     - [x] Verify production build stability and dev server hot-reloading
     - [x] Final sync of Living Documents (`task.md`, `walkthrough.md`, `CLAUDE.md`)
+
+- [x] **Phase 7: Emergency State Reset**
+    - [x] Perform Hard Reset to commit `a193640a`
+    - [x] Clean untracked experimental files (`backend/`, `scripts/`)
+    - [x] Restore stable engineering baseline
