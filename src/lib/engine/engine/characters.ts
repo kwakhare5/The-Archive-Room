@@ -330,21 +330,26 @@ export function updateCharacter(
 export function getCharacterSprite(ch: Character, sprites: CharacterSprites): SpriteData {
   switch (ch.state) {
     case CharacterState.TYPE:
-      if (isReadingTool(ch.currentTool)) {
-        return sprites.reading[ch.dir][ch.frame % 2];
+      if (ch.isSeated) {
+        if (isReadingTool(ch.currentTool)) {
+          return sprites.reading[ch.dir][ch.frame % 2];
+        }
+        return sprites.typing[ch.dir][ch.frame % 2];
       }
-      return sprites.typing[ch.dir][ch.frame % 2];
+      return sprites.walk[ch.dir][1];
     case CharacterState.WALK:
       return sprites.walk[ch.dir][ch.frame % 4];
     case CharacterState.READING:
-      // Reading at bookshelf — use reading animation frames
-      return sprites.reading[ch.dir][ch.frame % 2];
+      // Reading at bookshelf — use sitting frames ONLY if actually seated
+      if (ch.isSeated) return sprites.reading[ch.dir][ch.frame % 2];
+      return sprites.walk[ch.dir][1];
     case CharacterState.THINKING:
       // Thinking at whiteboard — hold still, walk frame 1 (standing)
       return sprites.walk[ch.dir][1];
     case CharacterState.DISCARDING:
-      // Discarding at bin — use typing animation (reaching forward)
-      return sprites.typing[ch.dir][ch.frame % 2];
+      // Discarding at bin — use sitting frames ONLY if actually seated
+      if (ch.isSeated) return sprites.typing[ch.dir][ch.frame % 2];
+      return sprites.walk[ch.dir][1];
     case CharacterState.IDLE:
     default:
       return sprites.walk[ch.dir][1];

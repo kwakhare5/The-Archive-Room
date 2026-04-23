@@ -430,6 +430,54 @@ export class ArchiveEngine {
     return true;
   }
 
+  /** Trigger an action for the specified agent at the specified furniture */
+  handleFurnitureClick(agentId: number, uid: string): boolean {
+    const ch = this.characters.get(agentId);
+    if (!ch) return false;
+
+    const item = this.layout.furniture.find((f) => f.uid === uid);
+    if (!item) return false;
+
+    // Define default actions for furniture types
+    const typeToCommand: Record<string, string> = {
+      BOOKSHELF: 'RAG_SEARCH',
+      WHITEBOARD: 'THINK',
+      BIN: 'TRIM_CONTEXT',
+      DESK_FRONT: 'TYPE',
+      SMALL_TABLE: 'TYPE',
+      SMALL_TABLE_SIDE: 'TYPE',
+      TABLE_FRONT: 'TYPE',
+    };
+
+    // Strip modifiers (like :left) for mapping
+    const baseType = item.type.split(':')[0];
+    const command = typeToCommand[baseType];
+
+    if (command) {
+      this.executeCommand(agentId, command, uid);
+      return true;
+    }
+
+    return false;
+  }
+
+  /** Resolve which furniture is at a specific tile, if any */
+  getFurnitureAt(col: number, row: number): PlacedFurniture | null {
+    for (const f of this.layout.furniture) {
+      const entry = getCatalogEntry(f.type);
+      if (!entry) continue;
+      if (
+        col >= f.col &&
+        col < f.col + entry.footprintW &&
+        row >= f.row &&
+        row < f.row + entry.footprintH
+      ) {
+        return f;
+      }
+    }
+    return null;
+  }
+
   /**
    * Find the best walkable tile adjacent to a furniture item.
    * Searches in priority order: below, right, left, above.
@@ -441,26 +489,42 @@ export class ArchiveEngine {
     const item = this.layout.furniture.find((f) => f.uid === furnitureUid);
     if (!item) return null;
 
-    const entry = getCatalogEntry(item.type);
+    // --- ANCHOR REDIRECTION ---
+    // If this is a stacked item (like BOOKSHELF or WHITEBOARD), find the bottom-most one in the stack
+    // so the agent always stands at the same spot regardless of which tile was clicked.
+    let anchor = item;
+    const baseType = item.type.split(':')[0];
+    if (baseType === 'BOOKSHELF' || baseType === 'WHITEBOARD') {
+      const neighbors = this.layout.furniture.filter((f) => f.type.startsWith(baseType) && f.col === item.col);
+      anchor = neighbors.reduce((prev, curr) => (curr.row > prev.row ? curr : prev), item);
+    }
+
+    const entry = getCatalogEntry(anchor.type);
     if (!entry) return null;
 
     // Try tiles adjacent to the furniture footprint
     const candidates: Array<{ col: number; row: number; facingDir: number }> = [];
     for (let dr = 0; dr < entry.footprintH; dr++) {
       for (let dc = 0; dc < entry.footprintW; dc++) {
-        const fc = item.col + dc;
-        const fr = item.row + dr;
-        // Below
-        candidates.push({ col: fc, row: fr + 1, facingDir: 3 }); // UP (facing the furniture above)
-        // Above
-        candidates.push({ col: fc, row: fr - 1, facingDir: 0 }); // DOWN
-        // Right
-        candidates.push({ col: fc + 1, row: fr, facingDir: 1 }); // LEFT
-        // Left
-        candidates.push({ col: fc - 1, row: fr, facingDir: 2 }); // RIGHT
+        const fc = anchor.col + dc;
+        const fr = anchor.row + dr;
+        
+        // Priority for BIN: 1. Right (facing LEFT), 2. Below (facing UP)
+        // This prevents the character from obscuring the small bin sprite.
+        if (baseType === 'BIN') {
+          candidates.push({ col: fc + 1, row: fr, facingDir: 1 }); // LEFT
+          candidates.push({ col: fc, row: fr + 1, facingDir: 3 }); // UP
+        } else {
+          // Priority for others: 1. Below (facing UP), 2. Right, 3. Left, 4. Above
+          candidates.push({ col: fc, row: fr + 1, facingDir: 3 }); // UP
+          candidates.push({ col: fc + 1, row: fr, facingDir: 1 }); // LEFT
+          candidates.push({ col: fc - 1, row: fr, facingDir: 2 }); // RIGHT
+          candidates.push({ col: fc, row: fr - 1, facingDir: 0 }); // DOWN
+        }
       }
     }
 
+    // Return the first walkable candidate
     for (const c of candidates) {
       if (isWalkable(c.col, c.row, this.tileMap, this.blockedTiles)) {
         return c;
@@ -545,6 +609,7 @@ export class ArchiveEngine {
       } else if (ch.tileCol === targetTile.col && ch.tileRow === targetTile.row) {
         // Already there — start interaction immediately
         ch.state = mapping.state as CharacterState;
+        ch.isSeated = false;
         ch.activeCommand = command;
         ch.targetFurnitureUid = target ?? null;
         ch.interactionTimer = mapping.duration;

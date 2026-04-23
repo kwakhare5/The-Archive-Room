@@ -30,8 +30,11 @@ Commands:
 
 Rule:
 - 'target' MUST be a valid 'uid' from the Spatial Manifest.
-- If the user asks for multiple actions (e.g., "Go to A then B"), return a JSON ARRAY of command objects.
-- If the user asks a general question, use THINK or RAG_SEARCH at a relevant furniture.
+- Use RAG_SEARCH for Bookshelf (Reading animation while standing).
+- Use THINK for Whiteboard (Thinking animation while standing).
+- Use TRIM_CONTEXT for Dustbin (Discarding animation while standing).
+- Return a JSON ARRAY to execute these in order.
+- Do NOT use "TYPE" for this demo as the agent must stand.
 - Return ONLY valid JSON (either a single object or an array of objects).
 - Do NOT use function calling. Return raw text JSON only.
 - Always include "agentId": 1 for the primary researcher.

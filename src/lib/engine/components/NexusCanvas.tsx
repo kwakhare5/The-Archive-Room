@@ -694,13 +694,30 @@ export function NexusCanvas({
         return;
       }
 
-      // No agent hit — check seat click while agent is selected
-      if (archiveEngine.selectedAgentId !== null) {
-        const selectedCh = archiveEngine.characters.get(archiveEngine.selectedAgentId);
-        // Skip seat reassignment for sub-agents
-        if (selectedCh && !selectedCh.isSubagent) {
-          const tile = screenToTile(e.clientX, e.clientY);
-          if (tile) {
+      // No agent hit — check furniture or seat click
+      const tile = screenToTile(e.clientX, e.clientY);
+      if (tile) {
+        // --- Furniture Click Action ---
+        const targetFurniture = archiveEngine.getFurnitureAt(tile.col, tile.row);
+        if (targetFurniture) {
+          // Default to primary agent if none selected
+          const activeId = archiveEngine.selectedAgentId ?? 1;
+          if (archiveEngine.characters.has(activeId)) {
+            const handled = archiveEngine.handleFurnitureClick(activeId, targetFurniture.uid);
+            if (handled) {
+              // On success, deselect and return
+              archiveEngine.setSelectedAgentId(null);
+              archiveEngine.setCameraFollowId(null);
+              return;
+            }
+          }
+        }
+
+        // --- Seat Assignment Logic ---
+        if (archiveEngine.selectedAgentId !== null) {
+          const selectedCh = archiveEngine.characters.get(archiveEngine.selectedAgentId);
+          // Skip seat reassignment for sub-agents
+          if (selectedCh && !selectedCh.isSubagent) {
             const seatId = archiveEngine.getSeatAtTile(tile.col, tile.row);
             if (seatId) {
               const seat = archiveEngine.seats.get(seatId);

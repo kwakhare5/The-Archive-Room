@@ -52,6 +52,7 @@ import type {
   SpriteData,
   TileType as TileTypeVal,
 } from '@/lib/engine/types';
+import { getCatalogEntry } from '../layout/furnitureCatalog';
 import { CharacterState, TILE_SIZE, TileType } from '@/lib/engine/types';
 import { getWallInstances, hasWallSprites, wallColorToHex } from '../wallTiles';
 import { getCharacterSprite } from './characters';
@@ -521,16 +522,40 @@ function renderTargetHighlights(
     const item = layoutFurniture.find(f => f.uid === ch.targetFurnitureUid);
     if (!item) continue;
     
-    // Draw pulsing highlight at furniture tile
+    // Expand highlight to cover entire stack for specific types
+    const baseType = item.type.split(':')[0];
+    let itemsInStack = [item];
+    if (baseType === 'BOOKSHELF' || baseType === 'WHITEBOARD') {
+      itemsInStack = layoutFurniture.filter(f => f.type.startsWith(baseType) && f.col === item.col);
+    }
+
+    // Calculate bounds of the entire stack
+    let minCol = item.col;
+    let minRow = item.row;
+    let maxCol = item.col;
+    let maxRow = item.row;
+
+    for (const f of itemsInStack) {
+      const entry = getCatalogEntry(f.type);
+      const fw = entry ? entry.footprintW : 1;
+      const fh = entry ? entry.footprintH : 1;
+      minCol = Math.min(minCol, f.col);
+      minRow = Math.min(minRow, f.row);
+      maxCol = Math.max(maxCol, f.col + fw);
+      maxRow = Math.max(maxRow, f.row + fh);
+    }
+
     const s = TILE_SIZE * zoom;
-    const fx = offsetX + item.col * s;
-    const fy = offsetY + item.row * s;
+    const fx = offsetX + minCol * s;
+    const fy = offsetY + minRow * s;
+    const fw_px = (maxCol - minCol) * s;
+    const fh_px = (maxRow - minRow) * s;
     
     ctx.save();
     ctx.strokeStyle = `rgba(255, 255, 255, ${pulse})`;
     ctx.lineWidth = 2 * zoom;
     ctx.setLineDash([4 * zoom, 2 * zoom]);
-    ctx.strokeRect(fx - 2, fy - 2, s + 4, s + 4);
+    ctx.strokeRect(fx - 2, fy - 2, fw_px + 4, fh_px + 4);
     ctx.restore();
   }
 }
