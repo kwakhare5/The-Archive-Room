@@ -267,9 +267,12 @@ export async function initBrowserMock(): Promise<void> {
     const fileLayout = await fetch(`${base}assets/${assetIndex.defaultLayout}?t=${Date.now()}`).then((r) => r.json());
     const fileRev = fileLayout.layoutRevision || 0;
 
-    // Force update ONLY if no saved layout exists in config
-    if (!layout) {
-      console.log(`[BrowserMock] Initializing default layout (v${fileRev})`);
+    const savedRev = layout?.layoutRevision || 0;
+    console.log(`[BrowserMock] File revision: ${fileRev}, Saved revision: ${savedRev}`);
+
+    // Force update if no saved layout exists OR if file version is newer
+    if (!layout || fileRev > savedRev) {
+      console.log(`[BrowserMock] ${!layout ? 'Initializing' : 'Updating'} to default layout (v${fileRev})`);
       layout = fileLayout;
       const updatedConfig = config || {
         layout: null,

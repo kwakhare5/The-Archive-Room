@@ -171,9 +171,12 @@ export function updateCharacter(
       ch.interactionTimer -= dt;
       if (ch.interactionTimer <= 0) {
         // Interaction complete — clear command and return to seat
+        const finishedAction = ch.activeCommand || 'unknown';
         ch.activeCommand = null;
         ch.targetFurnitureUid = null;
         ch.interactionTimer = 0;
+        
+        palaceBridge.notifyInteractionComplete(ch.id, finishedAction);
         // If agent has a seat, walk back to it
         if (ch.seatId) {
           const seat = seats.get(ch.seatId);

@@ -25,7 +25,7 @@
 import type { ArchiveEngine } from './engine/engine/ArchiveEngine';
 
 /** Default WebSocket URL. Override via ?ws= query param or environment. */
-const DEFAULT_WS_URL = 'ws://localhost:8765';
+const DEFAULT_WS_URL = 'ws://localhost:8765/ws';
 
 /** Incoming command from backend */
 interface BackendCommand {
@@ -52,6 +52,8 @@ export class PalaceEventBridge {
   private readonly url: string;
   private archiveEngine: ArchiveEngine | null = null;
   private reconnectDelay = 2000; // ms
+  private retryCount = 0;
+  private readonly MAX_LOCAL_RETRIES = 5;
 
   constructor(url?: string) {
     // Allow override via query param for dev flexibility (SSR safe)
@@ -59,6 +61,10 @@ export class PalaceEventBridge {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       wsOverride = params.get('ws');
+      if (params.get('bridge') === 'off') {
+        this.isDestroyed = true;
+        console.log('[PalaceEventBridge] Disabled via bridge=off param');
+      }
     }
     this.url = url ?? wsOverride ?? DEFAULT_WS_URL;
   }
@@ -77,6 +83,7 @@ export class PalaceEventBridge {
     try {
       this.ws = new WebSocket(this.url);
     } catch (err) {
+      this.retryCount++;
       console.warn('[PalaceEventBridge] Failed to create WebSocket:', err);
       this._scheduleReconnect();
       return;
@@ -85,6 +92,7 @@ export class PalaceEventBridge {
     this.ws.onopen = () => {
       console.log('[PalaceEventBridge] Connected ✓');
       this.reconnectDelay = 2000; // reset backoff
+      this.retryCount = 0; // reset retries
       // Announce ready with current agent list
       const agents = this.archiveEngine
         ? Array.from(this.archiveEngine.characters.keys()).filter((id) => id >= 0)
@@ -106,9 +114,9 @@ export class PalaceEventBridge {
     };
 
     this.ws.onclose = (evt) => {
-      console.log(`[PalaceEventBridge] Disconnected (code ${evt.code})`);
       this.ws = null;
       if (!this.isDestroyed) {
+        this.retryCount++;
         this._scheduleReconnect();
       }
     };
@@ -116,8 +124,19 @@ export class PalaceEventBridge {
 
   private _scheduleReconnect(): void {
     if (this.isDestroyed) return;
+
+    // Silent failure on localhost after several attempts
+    const isLocal = this.url.includes('localhost') || this.url.includes('127.0.0.1');
+    if (isLocal && this.retryCount > this.MAX_LOCAL_RETRIES) {
+      if (this.retryCount === this.MAX_LOCAL_RETRIES + 1) {
+        console.log('[PalaceEventBridge] Local backend not found. Suspending reconnection noise.');
+        console.log('[PalaceEventBridge] Tip: Start the backend or add ?bridge=off to disable this bridge.');
+      }
+      return;
+    }
+
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
-    console.log(`[PalaceEventBridge] Reconnecting in ${this.reconnectDelay}ms...`);
+    console.log(`[PalaceEventBridge] Reconnecting in ${this.reconnectDelay}ms... (Attempt ${this.retryCount})`);
     this.reconnectTimer = setTimeout(() => {
       this._connect();
     }, this.reconnectDelay);
@@ -204,7 +223,12 @@ export class PalaceEventBridge {
   /** Call this when the agent arrives at the target tile to notify backend. */
   notifyArrival(agentId: number, target: string, action: string): void {
     this._send({ event: 'AGENT_ARRIVED', agentId, target });
+  }
+
+  /** Call this when the interaction (e.g. thinking/reading) is finished. */
+  notifyInteractionComplete(agentId: number, action: string): void {
     this._send({ event: 'ANIMATION_COMPLETE', agentId, action });
+    this._send({ event: 'AGENT_IDLE', agentId });
   }
 
   /** Tear down the connection permanently. */

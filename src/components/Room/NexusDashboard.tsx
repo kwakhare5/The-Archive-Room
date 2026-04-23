@@ -87,10 +87,24 @@ export default function NexusDashboard() {
       const activeAgents = Array.from(archiveEngine.characters.values()).filter(c => c.isActive && !c.isSubagent);
       const agentId = archiveEngine.selectedAgentId || (activeAgents.length > 0 ? activeAgents[0].id : 1);
       
+      // Build spatial manifest for Gemini context
+      const layout = archiveEngine.getLayout();
+      const spatial_manifest = {
+        furniture: layout.furniture.map(f => ({
+          uid: f.uid,
+          type: f.type,
+          name: f.name || f.type
+        }))
+      };
+      
       const response = await fetch('http://localhost:8765/agent/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, agent_id: agentId })
+        body: JSON.stringify({ 
+          query, 
+          agent_id: agentId,
+          spatial_manifest
+        })
       });
       
       if (!response.ok) {

@@ -717,7 +717,16 @@ export class ArchiveEngine {
     // Collect tiles where active agents face desks
     const autoOnTiles = new Set<string>();
     for (const ch of this.characters.values()) {
-      if (!ch.isActive || !ch.seatId) continue;
+      if (!ch.seatId) continue;
+      // Trigger auto-on if agent is explicitly active OR in an interaction state
+      const isInteracting = [
+        CharacterState.TYPE,
+        CharacterState.READING,
+        CharacterState.THINKING,
+        CharacterState.DISCARDING
+      ].includes(ch.state);
+      
+      if (!ch.isActive && !isInteracting) continue;
       const seat = this.seats.get(ch.seatId);
       if (!seat) continue;
       // Find the desk tile(s) the agent faces from their seat

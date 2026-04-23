@@ -45,7 +45,10 @@
     - [x] Verify production build stability and dev server hot-reloading
     - [x] Final sync of Living Documents (`task.md`, `walkthrough.md`, `CLAUDE.md`)
 
-- [x] **Phase 7: Emergency State Reset**
-    - [x] Perform Hard Reset to commit `a193640a`
-    - [x] Clean untracked experimental files (`backend/`, `scripts/`)
-    - [x] Restore stable engineering baseline
+- [x] **Phase 8: Gemini Intelligence & Multi-Step Reasoning**
+    - [x] Initialize FastAPI backend with Gemini 1.5/2.0 integration
+    - [x] Implement **Spatial Manifest** injection for context-aware reasoning
+    - [x] Build **Multi-Step Command Queue** in backend
+    - [x] Synchronize animation completion events via WebSocket bridge
+    - [x] Implement **Auto-PC State** logic for seated agents
+    - [x] Verify multi-target demo (Bookshelf -> Whiteboard -> Bin)
