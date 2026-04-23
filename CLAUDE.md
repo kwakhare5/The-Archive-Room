@@ -147,8 +147,8 @@ Rendering:   HTML5 Canvas (60 FPS game loop, requestAnimationFrame)
 Pathfinding: BFS (Breadth-First Search) on walkability grid
 Font:        FS Pixel Sans (custom pixel font, @font-face in globals.css)
 Backend:     Python 3.10+ (FastAPI + Uvicorn)
-AI Model:    Gemini 1.5 Pro / Flash
-Protocol:    JSON over WebSocket (PalaceEventBridge)
+AI Model:    Gemini 2.0 Flash (gemini-flash-latest)
+Protocol:    JSON over WebSocket (PalaceEventBridge) with Multi-Step Queuing
 ```
 
 ## Core Concepts
@@ -159,8 +159,18 @@ Protocol:    JSON over WebSocket (PalaceEventBridge)
 
 **Command-Driven Navigation**: Agents do NOT wander randomly. Every movement is triggered by a backend command via the WebSocket Event Bridge.
 
+**Multi-Step Reasoning**: The backend supports sequences of commands (JSON arrays). It coordinates movement, interaction, and return-to-seat transitions via a feedback loop.
+
 ## Operational Protocol (HARDENED)
 - **Sentinel Header**: EVERY response MUST begin with the Expert Scan header.
 - **Diagnostic Verification**: Use a "Red Screen Test" (Diagnostic Color Change) to prove that code changes are reaching the browser.
 - **Mandatory Planning**: NO code changes are allowed without an approved implementation plan.
-- **The Pulse Protocol**: Every significant task or turn end MUST be saved via `npm run save` to ensure GitHub persistence.
+- **The Pulse Protocol**: Every significant task or turn end MUST be saved locally via `git commit` (and pushed via `npm run save` only when requested).
+
+---
+
+## 🛠️ Tech Bible Alignment Audit (2026-04-23)
+- [x] **Stack**: Next.js 16 + Tailwind v4 + FastAPI (Elite Stack)
+- [x] **AI**: Gemini Flash (Native Integration)
+- [x] **Persistence**: Git Checkpoints (Mandatory)
+- [x] **Resume Goal**: "Real-time AI spatial reasoning engine with 60FPS canvas rendering."
