@@ -53,7 +53,7 @@ export function createCharacter(
   const center = tileCenter(col, row);
   return {
     id,
-    state: CharacterState.TYPE,
+    state: CharacterState.IDLE,
     dir: seat ? seat.facingDir : Direction.DOWN,
     x: center.x,
     y: center.y,

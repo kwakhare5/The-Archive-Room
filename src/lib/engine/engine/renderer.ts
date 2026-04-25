@@ -589,7 +589,8 @@ function renderBubbles(
     // Position: centered above the character's head
     // Character is anchored bottom-center at (ch.x, ch.y), sprite is 16x24
     // Place bubble above head with a small gap; follow sitting offset
-    const sittingOff = ch.state === CharacterState.TYPE ? BUBBLE_SITTING_OFFSET_PX : 0;
+    const isSittingState = ch.isSeated;
+    const sittingOff = isSittingState ? BUBBLE_SITTING_OFFSET_PX : 0;
     const bubbleX = Math.round(offsetX + ch.x * zoom - cached.width / 2);
     const bubbleY = Math.round(
       offsetY + (ch.y + sittingOff - BUBBLE_VERTICAL_OFFSET_PX) * zoom - cached.height - 1 * zoom,
@@ -715,7 +716,8 @@ export function renderFrame(
   // Add character drop shadows (separate from character sprites for better sorting/look)
   for (const ch of characters) {
     if (ch.matrixEffect === 'despawn') continue;
-    const sittingOff = ch.state === CharacterState.TYPE ? CHARACTER_SITTING_OFFSET_PX : 0;
+    const isSittingState = ch.isSeated;
+    const sittingOff = isSittingState ? CHARACTER_SITTING_OFFSET_PX : 0;
     const shadowX = Math.round(offsetX + ch.x * zoom);
     const shadowY = Math.round(offsetY + (ch.y + sittingOff) * zoom);
     const shadowW = Math.round(12 * zoom);
