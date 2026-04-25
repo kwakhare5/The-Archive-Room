@@ -1,9 +1,13 @@
 # Archive Pulse - Effortless Save Script for The Archive Room
 # This script automates staging, committing, and pushing changes to GitHub.
 
+Param(
+    [string]$CustomMessage
+)
+
 $branch = git branch --show-current
 $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-$message = "Archive Pulse: $timestamp [Checkpoint]"
+$message = if ($CustomMessage) { $CustomMessage } else { "Archive Pulse: $timestamp [Checkpoint]" }
 
 Write-Host ">>> Starting Archive Pulse..." -ForegroundColor Cyan
 

@@ -72,7 +72,7 @@ export function findPath(
     { dc: 0, dr: 1 }, // down
     { dc: -1, dr: 0 }, // left
     { dc: 1, dr: 0 }, // right
-  ];
+  ].sort(() => Math.random() - 0.5);
 
   while (queue.length > 0) {
     const curr = queue.shift()!;
