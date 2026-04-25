@@ -205,16 +205,23 @@ export function buildDynamicCatalog(assets: LoadedAssetData): boolean {
   // Phase 3: Build state groups (on ↔ off pairs within same groupId + orientation)
   const stateMap = new Map<string, Map<string, string>>(); // "groupId|orientation" → (state → assetId)
   for (const asset of assets.catalog) {
-    if (asset.groupId && asset.state) {
+    if (asset.groupId) {
       const key = `${asset.groupId}|${asset.orientation || ''}`;
       let sm = stateMap.get(key);
       if (!sm) {
         sm = new Map();
         stateMap.set(key, sm);
       }
-      // For animation groups, use the first frame as the "on" representative
-      if (asset.animationGroup && asset.frame !== undefined && asset.frame > 0) continue;
-      sm.set(asset.state, asset.id);
+      // Assets without an explicit state are treated as "on" variants
+      const stateLabel = asset.state || 'on';
+      // For animation groups, only use the first frame as the "on" representative
+      const frameNum = asset.frame ?? 0;
+      if (frameNum > 0) continue;
+
+      // Prefer assets that have a state label if multiple exist, but otherwise take the first
+      if (stateLabel === 'on' && sm.has('on') && !asset.state) continue;
+
+      sm.set(stateLabel, asset.id);
     }
   }
   for (const sm of stateMap.values()) {
@@ -264,11 +271,15 @@ export function buildDynamicCatalog(assets: LoadedAssetData): boolean {
   // Phase 4: Build animation groups
   const animGroupCollector = new Map<string, Array<{ id: string; frame: number }>>();
   for (const asset of assets.catalog) {
-    if (asset.animationGroup && asset.frame !== undefined) {
-      let frames = animGroupCollector.get(asset.animationGroup);
+    if (asset.frame !== undefined) {
+      const animGroupId =
+        asset.animationGroup || (asset.groupId ? `${asset.groupId}|${asset.orientation || ''}` : null);
+      if (!animGroupId) continue;
+
+      let frames = animGroupCollector.get(animGroupId);
       if (!frames) {
         frames = [];
-        animGroupCollector.set(asset.animationGroup, frames);
+        animGroupCollector.set(animGroupId, frames);
       }
       frames.push({ id: asset.id, frame: asset.frame });
     }
