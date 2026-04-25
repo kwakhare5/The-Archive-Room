@@ -75,9 +75,10 @@ export class ArchiveEngine {
     this.rebuildFurnitureInstances();
     this.walkableTiles = getWalkableTiles(this.tileMap, this.blockedTiles);
 
-    // Shift character positions when grid expands left/up
-    if (shift && (shift.col !== 0 || shift.row !== 0)) {
-      for (const ch of this.characters.values()) {
+    // Shift character positions when grid expands left/up and reset hues to normal
+    for (const ch of this.characters.values()) {
+      ch.hueShift = 0;
+      if (shift && (shift.col !== 0 || shift.row !== 0)) {
         ch.tileCol += shift.col;
         ch.tileRow += shift.row;
         ch.x += shift.col * TILE_SIZE;
@@ -254,11 +255,9 @@ export class ArchiveEngine {
       if (counts[i] === minCount) available.push(i);
     }
     const palette = available[Math.floor(Math.random() * available.length)];
-    // First round (minCount === 0): no hue shift. Subsequent rounds: random ≥45°.
-    let hueShift = 0;
-    if (minCount > 0) {
-      hueShift = HUE_SHIFT_MIN_DEG + Math.floor(Math.random() * HUE_SHIFT_RANGE_DEG);
-    }
+    // Disable random hue shifts to ensure agents have "normal" skin tones.
+    // Variety is provided by the 6 base palettes.
+    const hueShift = 0;
     return { palette, hueShift };
   }
 
@@ -276,7 +275,8 @@ export class ArchiveEngine {
     let hueShift: number;
     if (preferredPalette !== undefined) {
       palette = preferredPalette;
-      hueShift = preferredHueShift ?? 0;
+      // Force "normal" colors even for reloaded/restored agents
+      hueShift = 0;
     } else {
       const pick = this.pickDiversePalette();
       palette = pick.palette;
@@ -803,19 +803,18 @@ export class ArchiveEngine {
         const tileCol = seat.seatCol + dCol * d;
         const tileRow = seat.seatRow + dRow * d;
         autoOnTiles.add(`${tileCol},${tileRow}`);
-      }
-      // Also check tiles to the sides of the facing direction (desks can be wide)
-      for (let d = 1; d <= AUTO_ON_SIDE_DEPTH; d++) {
-        const baseCol = seat.seatCol + dCol * d;
-        const baseRow = seat.seatRow + dRow * d;
-        if (dCol !== 0) {
-          // Facing left/right: check tiles above and below
-          autoOnTiles.add(`${baseCol},${baseRow - 1}`);
-          autoOnTiles.add(`${baseCol},${baseRow + 1}`);
-        } else {
-          // Facing up/down: check tiles left and right
-          autoOnTiles.add(`${baseCol - 1},${baseRow}`);
-          autoOnTiles.add(`${baseCol + 1},${baseRow}`);
+
+        // Also check tiles to the sides at this depth (desks can be wide)
+        for (let s = 1; s <= AUTO_ON_SIDE_DEPTH; s++) {
+          if (dCol !== 0) {
+            // Facing left/right: check tiles above and below
+            autoOnTiles.add(`${tileCol},${tileRow - s}`);
+            autoOnTiles.add(`${tileCol},${tileRow + s}`);
+          } else {
+            // Facing up/down: check tiles left and right
+            autoOnTiles.add(`${tileCol - s},${tileRow}`);
+            autoOnTiles.add(`${tileCol + s},${tileRow}`);
+          }
         }
       }
     }

@@ -131,8 +131,8 @@ export const WAITING_BUBBLE_DURATION_SEC = 2.0;
 export const DISMISS_BUBBLE_FAST_FADE_SEC = 0.3;
 /** Default/fallback palette count (bundled characters). Actual count comes from getLoadedCharacterCount(). */
 export const PALETTE_COUNT = 6;
-export const HUE_SHIFT_MIN_DEG = 45;
-export const HUE_SHIFT_RANGE_DEG = 271;
+export const HUE_SHIFT_MIN_DEG = 0;
+export const HUE_SHIFT_RANGE_DEG = 0;
 export const AUTO_ON_FACING_DEPTH = 3;
 export const AUTO_ON_SIDE_DEPTH = 2;
 export const CHARACTER_HIT_HALF_WIDTH = 8;

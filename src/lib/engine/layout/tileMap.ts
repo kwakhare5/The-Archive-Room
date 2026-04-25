@@ -11,7 +11,11 @@ export function isWalkable(
   const cols = rows > 0 ? tileMap[0].length : 0;
   if (row < 0 || row >= rows || col < 0 || col >= cols) return false;
   const t = tileMap[row][col];
-  if (t === TileType.WALL || t === TileType.VOID) return false;
+  
+  // Strictly allow ONLY floor tiles (types 1-9)
+  const isFloor = t >= TileType.FLOOR_1 && t <= TileType.FLOOR_9;
+  if (!isFloor) return false;
+
   if (blockedTiles.has(`${col},${row}`)) return false;
   return true;
 }
