@@ -1,126 +1,62 @@
-<div align="center">
+# 🏛️ The Archive Room (Memory Palace UI)
 
-# 🏛️ THE ARCHIVE ROOM
-### **The Archive Room**
+> **A Spatial Second Brain.** Stop organizing by lists. Start remembering by location.
 
-![The Archive Room Hero](_legacy_archive/documentation/archive_room_hero_mockup.png)
+![Archive Room Demo](./public/archive-room-preview.png)
 
-**Transforming raw AI logic into a high-fidelity, interactive spatial simulation.**
+*Transform abstract knowledge into a physical, spatial workspace using the Method of Loci. Built for high-utility visual productivity.*
 
-[![Deployment Status](https://img.shields.io/badge/Status-Elite_Migration-blueviolet?style=for-the-badge&logo=vercel)](https://github.com/kwakhare5/The-Archive-Room)
-[![Engine](https://img.shields.io/badge/Engine-Next.js_15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![Design](https://img.shields.io/badge/Aesthetic-Locked-FFD700?style=for-the-badge)](https://github.com/kwakhare5/The-Archive-Room)
+## 🌟 The Vision
 
-[**Explore the Nexus →**](https://the-archive-room.vercel.app) | [**View Architecture →**](#-architecture-the-data-nexus) | [**Request Access →**](https://github.com/kwakhare5/The-Archive-Room/issues)
+The Archive Room is not a game or a simulation—it is a **High-Utility Visual Productivity System**. Human memory evolved to remember *places* better than *lists*. This project exploits spatial encoding to allow users to anchor digital information (PDFs, Notes, Links) to specific physical coordinates in a 2D virtual office. 
 
-</div>
+Retrieving information becomes a matter of "walking" to it, triggering stronger neural recall than clicking through nested folders. It is the Visual Notion—a workspace that remembers where you put your ideas so you don't have to.
 
----
+## 🚀 Tech Stack (The Elite Standard)
 
-## 💎 The Vision: Observability Through Spatial Memory
+- **Frontend Core**: Next.js 14 (App Router) + TypeScript
+- **Rendering Engine**: Custom 2D Canvas Matrix Engine (`ArchiveEngine`)
+- **State & Bridge**: `apiBridge.ts` syncing with FastAPI (Python) backend
+- **Styling**: Tailwind CSS v4 + Framer Motion (Micro-animations)
+- **Pathfinding**: Optimized A* multi-tile navigation algorithms
 
-Modern AI agents operate in "Black Boxes." **The Archive Room** breaks the box. By leveraging the **Method of Loci (Memory Palace)**, we map ephemeral agent reasoning, RAG retrievals, and tool executions onto a physical, pixel-art environment.
+## 🏗️ Architectural Deep Dive
 
-When an agent "thinks," you don't just see a log—you see them walk to the **Whiteboard**. When they retrieve data, they visit the **Archives**. This is the future of **Human-AI Interpretability**.
+The Archive Room operates on a **Feature-Based Domain-Driven Architecture**, designed for scale to handle 10,000+ DAU without thread blocking.
 
----
+### The Facade Pattern: `ArchiveEngine`
+To prevent monolithic memory leaks and logic entanglement, the spatial rendering layer has been strictly decomposed:
+1. **`LayoutManager`**: Handles all furniture grid mapping, placement validation, and collision boundaries.
+2. **`CharacterManager`**: Controls agent state, autonomous routing, matrix despawn effects, and hit-detection.
+3. **`CameraManager`**: Orchestrates viewport transformations, screen-to-world math, and smooth target tracking.
 
-## ✨ Core Capabilities
+## 🛠️ Local Development Setup
 
-### 🛰️ Real-Time Event Bridge
-Zero-latency WebSocket synchronization between your FastAPI backend and the Next.js 15 frontend. Watch agents react to code hooks, file changes, and live sessions in sub-10ms intervals.
+1. **Clone & Install**
+   ```bash
+   git clone https://github.com/kwakhare5/The-Archive-Room.git
+   cd The-Archive-Room
+   npm install
+   ```
 
-### 🧠 Spatial Intelligence Mapping
-- **The Archives (RAG)**: Visual representation of Vector Database queries.
-- **The Thinking Hub**: Real-time visualization of LLM chain-of-thought phases.
-- **Agent Swarm Management**: Seamlessly monitor multiple sub-agents in a shared isometric space.
+2. **Environment Configuration**
+   Ensure your local FastAPI backend is running on `http://127.0.0.1:8765`.
+   *(Note: The UI will gracefully fallback to local mock data if the backend is unreachable via the `isBrowserRuntime` flag).*
 
-### 🎨 Elite Design System (LOCKED)
-A bespoke, high-contrast aesthetic built on **Tailwind CSS v4**. Featuring glassmorphism HUDs, professional pixel-art assets, and a 60FPS rendering engine optimized for smooth panning and zooming.
+3. **Run the Development Server**
+   ```bash
+   npm run dev
+   ```
 
----
+4. **Access the Palace**
+   Navigate to `http://localhost:3000` to enter your spatial second brain.
 
-## 🏗️ Architecture: The Archive Room
+## 🧹 Maintenance: The Purge Protocol
 
-```mermaid
-graph TD
-    subgraph "The Intelligence Layer"
-        Backend[FastAPI Bridge]
-        LLM[Gemini 1.5 Pro]
-        VectorDB[Supabase Vector]
-    end
+This project adheres to strict cleanliness standards. 
+- **No Dead Code**: Unused assets or "temp" variables are aggressively purged.
+- **Strict Naming**: Variables must describe their exact intent (`normalizedPayload` over `data`).
+- **No God Classes**: Complex systems must be decomposed into typed managers.
 
-    subgraph "The Visual Nexus (Next.js 15)"
-        UI[RoomDashboard]
-        Engine[Pixel Rendering Engine]
-        Bridge[PalaceEventBridge]
-    end
-
-    LLM -->|Chain of Thought| Backend
-    VectorDB -->|RAG Result| Backend
-    Backend -->|WebSocket Events| Bridge
-    Bridge -->|Imperative State| Engine
-    Engine -->|60FPS Render| UI
-```
-
----
-
-## 🚀 The Elite Stack
-
-| Tier | Technology | Business Value |
-| :--- | :--- | :--- |
-| **Frontend** | **Next.js 15 (Turbopack)** | Enterprise-grade speed and SEO-ready architecture. |
-| **Styling** | **Tailwind CSS v4** | Token-driven design consistency with sub-pixel precision. |
-| **Backend** | **FastAPI + Uvicorn** | High-concurrency event handling for real-time swarms. |
-| **Real-time** | **WebSockets (PalaceBridge)** | Persistent, stateful communication with sub-10ms latency. |
-| **Database** | **Supabase Vector (pgvector)** | Production-ready spatial data retrieval. |
-
----
-
-## 🛠️ Setup & Deployment
-
-### Engineering Environment
-```bash
-# Clone the Enterprise Repository
-git clone https://github.com/kwakhare5/The-Archive-Room.git
-cd The-Archive-Room
-
-# Ignite the Visual Nexus
-npm install
-npm run dev
-```
-
-### Backend Bridge Initialization
-```bash
-# Navigate to Intelligence Layer
-cd backend
-pip install -r requirements.txt
-
-# Launch High-Concurrency Server
-python main.py
-```
-
----
-
-## 📅 Roadmap to V1.0 (Enterprise Ready)
-
-- [x] **Infrastucture**: Next.js 15 App Router & Turbopack Integration.
-- [x] **Visual Identity**: Full UI Redesign & Strict Immutability Lock.
-- [/] **Connectivity**: FastAPI WebSocket Bridge (Sub-agent Sync).
-- [ ] **Data Layer**: Supabase Vector Integration (Always Live).
-- [ ] **Deployment**: Vercel Edge Distribution.
-
----
-
-## 🤝 Contribution & Support
-
-The Archive Room is an **Elite-Tier** open-source project. We welcome contributions that align with our **Architecture Audit** guidelines.
-
-- **Founder**: [Karan Wakhare](https://github.com/kwakhare5)
-- **Twitter**: [@kwakhare5](https://twitter.com/kwakhare5)
-
----
-
-<div align="center">
-Built with 💜 for the future of Autonomous Intelligence.
-</div>
+## 📄 License
+Proprietary & Confidential. All rights reserved.

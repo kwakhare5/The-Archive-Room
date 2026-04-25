@@ -1,4 +1,4 @@
-import NexusDashboard from '@/components/Room/NexusDashboard';
+import NexusDashboard from '@/features/spatial/components/NexusDashboard';
 
 export default function Home() {
   return (
@@ -7,3 +7,4 @@ export default function Home() {
     </main>
   );
 }
+
