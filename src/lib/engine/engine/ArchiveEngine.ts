@@ -524,6 +524,9 @@ export class ArchiveEngine {
       }
     }
 
+    // Shuffle candidates to encourage using different tiles of the furniture width
+    candidates.sort(() => Math.random() - 0.5);
+
     // Return the first walkable candidate
     for (const c of candidates) {
       if (isWalkable(c.col, c.row, this.tileMap, this.blockedTiles)) {

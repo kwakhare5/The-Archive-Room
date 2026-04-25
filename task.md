@@ -52,3 +52,9 @@
     - [x] Synchronize animation completion events via WebSocket bridge
     - [x] Implement **Auto-PC State** logic for seated agents
     - [x] Verify multi-target demo (Bookshelf -> Whiteboard -> Bin)
+
+- [x] **Phase 9: Pathfinding Optimization (Smooth Human-Like)**
+    - [x] Implement Smooth A* with Turn Penalties in `tileMap.ts`
+    - [x] Broaden walkability rules (Unlocking 3-tile doorway)
+    - [x] Randomize interaction targets in `ArchiveEngine.ts` (Bookshelf/Whiteboard spread)
+    - [x] Verify agent spread in wide openings

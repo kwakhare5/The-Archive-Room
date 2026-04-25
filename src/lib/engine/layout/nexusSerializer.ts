@@ -241,7 +241,7 @@ export function getSeatTiles(seats: Map<string, Seat>): Set<string> {
 }
 
 /** Default floor colors for the two rooms */
-const DEFAULT_LEFT_ROOM_COLOR: ColorValue = { h: 35, s: 30, b: 15, c: 0 }; // warm beige
+const DEFAULT_LEFT_ROOM_COLOR: ColorValue = { h: 32, s: 30, b: 15, c: 0 }; // shifted warm beige
 const DEFAULT_RIGHT_ROOM_COLOR: ColorValue = { h: 25, s: 45, b: 5, c: 10 }; // warm brown
 
 /** Create a minimal fallback layout (used only when no default-layout.json exists) */

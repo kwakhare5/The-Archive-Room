@@ -12,9 +12,10 @@ export function isWalkable(
   if (row < 0 || row >= rows || col < 0 || col >= cols) return false;
   const t = tileMap[row][col];
   
-  // Strictly allow ONLY floor tiles (types 1-9)
-  const isFloor = t >= TileType.FLOOR_1 && t <= TileType.FLOOR_9;
-  if (!isFloor) return false;
+  // Broaden walkability: Allow all tiles EXCEPT walls (0) and manual wall tiles (100-186)
+  // This ensures transition tiles and doorway thresholds are considered walkable.
+  const isWall = t === TileType.WALL || (t >= 100 && t <= 186);
+  if (isWall) return false;
 
   if (blockedTiles.has(`${col},${row}`)) return false;
   return true;
@@ -38,7 +39,9 @@ export function getWalkableTiles(
   return tiles;
 }
 
-/** BFS pathfinding on 4-connected grid (no diagonals). Returns path excluding start, including end. */
+/** Smooth A* pathfinding on 4-connected grid (no diagonals).
+ *  Uses turn penalties to avoid unnecessary zig-zags and expanded walkability for wide openings.
+ *  Returns path excluding start, including end. */
 export function findPath(
   startCol: number,
   startRow: number,
@@ -49,43 +52,47 @@ export function findPath(
 ): Array<{ col: number; row: number }> {
   if (startCol === endCol && startRow === endRow) return [];
 
-  const key = (c: number, r: number) => `${c},${r}`;
-  const startKey = key(startCol, startRow);
-  const endKey = key(endCol, endRow);
+  const key = (c: number, r: number, dir: number) => `${c},${r},${dir}`;
+  const endKey = (c: number, r: number) => `${c},${r}`;
+  const targetKey = endKey(endCol, endRow);
 
-  // End must be walkable (or be a chair tile which may be adjacent to desk)
-  // We allow the end tile even if it's not strictly walkable for chair positions
-  const endWalkable = isWalkable(endCol, endRow, tileMap, blockedTiles);
-  if (!endWalkable) {
-    // If the end is a desk tile, we still can't path there
-    return [];
-  }
+  // End must be walkable
+  if (!isWalkable(endCol, endRow, tileMap, blockedTiles)) return [];
 
-  const visited = new Set<string>();
-  visited.add(startKey);
+  // Manhattan distance heuristic
+  const h = (c: number, r: number) => Math.abs(c - endCol) + Math.abs(r - endRow);
 
-  const parent = new Map<string, string>();
-  const queue: Array<{ col: number; row: number }> = [{ col: startCol, row: startRow }];
+  // Priority queue for A* (col, row, prevDir, priority)
+  // Directions: 0:UP, 1:RIGHT, 2:DOWN, 3:LEFT, 4:NONE
+  const openSet: Array<{ col: number; row: number; prevDir: number; priority: number }> = [
+    { col: startCol, row: startRow, prevDir: 4, priority: h(startCol, startRow) },
+  ];
+
+  const gScore = new Map<string, number>();
+  gScore.set(key(startCol, startRow, 4), 0);
+
+  const parent = new Map<string, { col: number; row: number; prevDir: number }>();
 
   const dirs = [
-    { dc: 0, dr: -1 }, // up
-    { dc: 0, dr: 1 }, // down
-    { dc: -1, dr: 0 }, // left
-    { dc: 1, dr: 0 }, // right
-  ].sort(() => Math.random() - 0.5);
+    { dc: 0, dr: -1, id: 0 }, // UP
+    { dc: 1, dr: 0, id: 1 },  // RIGHT
+    { dc: 0, dr: 1, id: 2 },  // DOWN
+    { dc: -1, dr: 0, id: 3 }, // LEFT
+  ];
 
-  while (queue.length > 0) {
-    const curr = queue.shift()!;
-    const currKey = key(curr.col, curr.row);
+  while (openSet.length > 0) {
+    openSet.sort((a, b) => a.priority - b.priority);
+    const curr = openSet.shift()!;
+    const currKey = key(curr.col, curr.row, curr.prevDir);
 
-    if (currKey === endKey) {
-      // Reconstruct path
+    if (endKey(curr.col, curr.row) === targetKey) {
       const path: Array<{ col: number; row: number }> = [];
-      let k = endKey;
-      while (k !== startKey) {
-        const [c, r] = k.split(',').map(Number);
-        path.unshift({ col: c, row: r });
-        k = parent.get(k)!;
+      let k = curr;
+      while (k.col !== startCol || k.row !== startRow) {
+        path.unshift({ col: k.col, row: k.row });
+        const p = parent.get(key(k.col, k.row, k.prevDir));
+        if (!p) break;
+        k = p;
       }
       return path;
     }
@@ -93,17 +100,33 @@ export function findPath(
     for (const d of dirs) {
       const nc = curr.col + d.dc;
       const nr = curr.row + d.dr;
-      const nk = key(nc, nr);
+      const nk = key(nc, nr, d.id);
 
-      if (visited.has(nk)) continue;
       if (!isWalkable(nc, nr, tileMap, blockedTiles)) continue;
 
-      visited.add(nk);
-      parent.set(nk, currKey);
-      queue.push({ col: nc, row: nr });
+      // HUMAN-LIKE LOGIC:
+      // 1. Base cost = 1.0
+      // 2. Turn penalty = 0.5 (makes straight lines much preferred)
+      // 3. Tiny jitter = 0.05 (variety for wide openings without causing zig-zags)
+      const isTurn = curr.prevDir !== 4 && curr.prevDir !== d.id;
+      const stepCost = 1.0 + (isTurn ? 0.5 : 0) + Math.random() * 0.05;
+      
+      const tentativeGScore = (gScore.get(currKey) ?? Infinity) + stepCost;
+
+      if (tentativeGScore < (gScore.get(nk) ?? Infinity)) {
+        parent.set(nk, curr);
+        gScore.set(nk, tentativeGScore);
+        const priority = tentativeGScore + h(nc, nr);
+        
+        const existing = openSet.find(n => n.col === nc && n.row === nr && n.prevDir === d.id);
+        if (existing) {
+          existing.priority = priority;
+        } else {
+          openSet.push({ col: nc, row: nr, prevDir: d.id, priority });
+        }
+      }
     }
   }
 
-  // No path found
   return [];
 }

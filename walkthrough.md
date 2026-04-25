@@ -18,8 +18,16 @@ Successfully transformed the Memory Palace into a connected **Data Nexus** by in
 - **Auto-PC State**: Enhanced `ArchiveEngine` to automatically turn electronics **ON** when an agent is seated and in an interaction state (`TYPE`, `READING`, etc.).
 - **Protocol Guardrails**: Locked down the reasoning engine to prevent "Function Calling" drift and ensure strict JSON output.
 
+### 4. Pathfinding Optimization (Smooth Human-Like)
+- **Smooth A* with Turn Penalties**: Replaced the stochastic engine with a "Smooth A*" implementation. Added a `0.5` cost penalty for turning, which forces agents to stay in straight lines as much as possible, mimicking human movement.
+- **Walkability Expansion**: Redefined `isWalkable` to allow any tile that isn't explicitly a Wall. This ensures that custom doorway thresholds or non-standard floor types in the 3-tile opening are no longer blocked.
+- **Natural Doorway Utilization**: By combining the turn penalty with the unlocked tiles, agents coming from different sides of a room will naturally "stay in their lane" and pass through different tiles of the doorway without funneling to the center.
+- **Interaction Target Spread**: Added a randomization step to furniture target resolution in `ArchiveEngine.ts`. Agents will now randomly choose between the left and right sides of multi-tile objects like Bookshelves and Whiteboards, preventing the "left-side funneling" behavior.
+- **Diagnostic Verification**: Confirmed code deployment via a subtle floor color hue shift in `nexusSerializer.ts`.
+
 ## Final State
 - **Backend Port**: `8765`
 - **Model**: `gemini-flash-latest`
 - **Bridge Version**: `v1.2` (Multi-step enabled)
+- **Pathfinding**: Stochastic A* (Randomized cost)
 - **Visuals**: Auto-state synchronization verified for PCs.
