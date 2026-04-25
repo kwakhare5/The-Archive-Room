@@ -78,11 +78,16 @@ This project maintains its pulse via:
 
 # The Archive Room — Compressed Reference
 
-Standalone React web app: pixel-art "The Archive Room" where AI agent operations (RAG search, code generation, reasoning, idle) are visualized as physical character movements and furniture interactions.
+**Motto**: "Spatial Knowledge Mastery"
+**Mission**: A high-utility Visual Memory Palace for organizing, storing, and retrieving real-world information spatially.
+
+Standalone React web app: A "Spatial Knowledge OS" (Visual Notion) where AI agent operations and user knowledge are visualized through physical room interactions.
 
 ## Vision & Concept
 
-**Black Box Breaker**: Traditional AI/RAG systems are invisible — you ask a question, text appears. The Archive Room shatters that by translating invisible AI data operations into physical, spatial movements within a virtual room. You literally watch your AI brain work.
+**Visual Notion / Second Brain**: This project is a real-life helping tool. It leverages the "Method of Loci" (spatial memory) to help users manage complex information. Instead of a flat list in Notion, you organize notes in a physical 2D office.
+
+**Black Box Breaker**: Translates invisible AI/RAG data operations into physical, spatial movements. You literally watch your "Second Brain" work.
 
 **Core Principle — "Furniture-as-Function"**: Every piece of furniture is a functional API endpoint, not decoration. Agents physically navigate to specific furniture to perform backend operations.
 

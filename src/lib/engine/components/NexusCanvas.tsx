@@ -44,6 +44,7 @@ interface NexusCanvasProps {
   onZoomChange: (zoom: number) => void;
   panRef: React.MutableRefObject<{ x: number; y: number }>;
   assetsLoaded: boolean;
+  onFurnitureSelect: (uid: string, name: string) => void;
 }
 
 export function NexusCanvas({
@@ -62,6 +63,7 @@ export function NexusCanvas({
   onZoomChange,
   panRef,
   assetsLoaded,
+  onFurnitureSelect,
 }: NexusCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -699,9 +701,12 @@ export function NexusCanvas({
       if (tile) {
         // --- Furniture Click Action ---
         const targetFurniture = archiveEngine.getFurnitureAt(tile.col, tile.row);
-        if (targetFurniture) {
-          // Default to primary agent if none selected
-          const activeId = archiveEngine.selectedAgentId ?? 1;
+          if (targetFurniture) {
+            // Trigger selection callback for inspector
+            onFurnitureSelect(targetFurniture.uid, targetFurniture.name || targetFurniture.type);
+
+            // Default to primary agent if none selected for potential interaction
+            const activeId = archiveEngine.selectedAgentId ?? 1;
           if (archiveEngine.characters.has(activeId)) {
             const handled = archiveEngine.handleFurnitureClick(activeId, targetFurniture.uid);
             if (handled) {

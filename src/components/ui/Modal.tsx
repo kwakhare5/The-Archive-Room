@@ -24,18 +24,20 @@ export function Modal({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50" style={{ zIndex }} onClick={onClose} />
+      <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-[2px]" style={{ zIndex }} onClick={onClose} />
       <div
-        className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-bg border-2 border-border rounded-none shadow-pixel p-4 min-w-xs ${className}`}
+        className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-bg border border-border rounded-none shadow-pixel p-2 min-w-xs ${className}`}
         style={{ zIndex: zIndex + 1 }}
       >
-        <div className="flex items-center justify-between py-4 px-10 border-b border-border mb-4">
-          <span className="text-accent-bright text-2xl">{title}</span>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            x
+        <div className="flex items-center justify-between py-6 px-10 border-b border-border mb-4 bg-bg-dark">
+          <span className="text-accent font-bold uppercase tracking-widest text-lg">{title}</span>
+          <Button variant="ghost" size="icon" onClick={onClose} className="text-text-muted hover:text-text">
+            ×
           </Button>
         </div>
-        {children}
+        <div className="p-4">
+          {children}
+        </div>
       </div>
     </>
   );

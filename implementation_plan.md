@@ -1,33 +1,36 @@
-# Implementation Plan: Archive Room Intelligence Phase
+# Implementation Plan: Phase 1 - The Knowledge Planting Engine
 
-Connect the "The Archive Room" UI to a real-time agent reasoning engine driven by FastAPI and Gemini.
+This phase transforms the static office furniture into functional storage units for your "Visual Notion." We will enable the ability to select a bookshelf and "Plant" a note inside it.
 
 ## User Review Required
-
 > [!IMPORTANT]
-> This phase requires the **FastAPI backend (`localhost:8765`)** to be running simultaneously with the frontend.
+> This plan introduces a new data file: `knowledge_map.json`. This file will store your personal notes and their spatial coordinates (furniture IDs).
 
 ## Proposed Changes
 
-### 1. Backend Enhancement (FastAPI)
-- [x] **Gemini Integration**: Add `google-generativeai` to `requirements.txt`.
-- [x] **Reasoning Engine**: Create a `reasoning.py` module that uses Gemini to map user queries to agent actions (RAG_SEARCH, THINK, TRIM).
-- [x] **Command API**: Add `POST /agent/query` to trigger agent tasks.
+### 1. Data Layer (The Memory)
+#### [NEW] `src/lib/engine/knowledgeStore.ts`
+- Create a singleton `KnowledgeStore` class.
+- Handle Load/Save operations for `knowledge_map.json`.
+- Provide methods: `addNote(furnitureId, note)`, `getNotes(furnitureId)`, `deleteNote(id)`.
 
-### 2. Frontend WebSocket Bridge (React)
-- [x] **`useWebSocket` Hook**: Implement a robust hook in `src/hooks/useWebSocket.ts`.
-- [x] **Agent Controller**: Create `src/lib/engine/agentController.ts` to handle incoming `AGENT_COMMAND` messages and drive character movement.
+### 2. UI Layer (The HUD)
+#### [NEW] `src/components/Room/KnowledgeInspector.tsx`
+- A clean, right-side panel that slides in when a bookshelf is selected.
+- Displays the list of notes "planted" in that specific shelf.
+- Includes a "Plant New Note" text area.
+- Styling: Matches the light-themed, minimalist office aesthetic (FS Pixel Sans font).
 
-### 3. Visual Feedback
-- [x] **Thought Bubbles**: Add floating UI elements over agents when they are in "THINK" or "SEARCH" mode.
-- [x] **Target Highlighting**: Pulse the target furniture when an agent is moving toward it.
+### 3. Integration (The Connection)
+#### [MODIFY] `src/lib/engine/engine/ArchiveEngine.ts`
+- Update the `selectFurniture` logic to trigger the `KnowledgeInspector` visibility.
+#### [MODIFY] `src/components/Room/NexusDashboard.tsx`
+- Mount the `KnowledgeInspector` component.
 
 ## Verification Plan
 
-### Automated Tests
-- Test WebSocket connection stability.
-- Verify `AGENT_COMMAND` payload structure matches between Python and TS.
-
 ### Manual Verification
-- Send a query via Postman/Curl: `POST /agent/query {"text": "Where is the iPod documentation?"}`.
-- Observe agent moving to a Bookshelf and displaying a "Searching..." state.
+1. **Selection Test**: Click a bookshelf and verify the Inspector panel opens on the right.
+2. **Planting Test**: Type a note, click "Plant," and verify it appears in the shelf's list.
+3. **Persistence Test**: Refresh the page and verify the note is still there.
+4. **Agent Alignment**: Click an agent and verify it DOES NOT open the Knowledge Inspector (only furniture).

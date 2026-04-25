@@ -1,69 +1,17 @@
-# Tasks: Archive Room Intelligence Phase
+# Task Tracker: Phase 1 - Knowledge Planting Engine
 
-- [x] **Phase 0: Engineering Hardening**
-    - [x] Consolidate Global Standards into `GEMINI.md` / `AGENTS.md`
-    - [x] Implement **Absolute Permission Protocol** (Big vs Small tasks)
-    - [x] Enforce **Project Tracking Standard** (`task.md`, `walkthrough.md`)
-    - [x] Sync `CLAUDE.md` milestones with current project state
-
-- [x] **Phase 1: Backend Intelligence**
-    - [x] Add `google-generativeai` to `requirements.txt`
-    - [x] Implement `backend/reasoning.py` (Gemini Logic)
-    - [x] Create `POST /agent/query` endpoint in `main.py`
-    - [x] Test agent command broadcasting via WebSockets
-
-- [x] **Phase 2: Communication Bridge**
-    - [x] Update `PalaceEventBridge` to handle Gemini command format
-    - [x] Integrate `AgentQueryInput` component for user dispatch
-    - [x] Connect bridge to `OfficeState.executeCommand`
-    - [x] Implement "Thought" metadata passthrough to agents
-
-- [x] **Phase 3: Visual Polish & Integration**
-    - [x] Display agent thoughts in `ToolOverlay`
-    - [x] Add Pulse Effect for target furniture during interaction
-    - [x] Final UI verification and production lock
-
-- [x] **Phase 4: Protocol Hardening & Alignment**
-    - [x] Rename project to `the-archive-room` in `package.json`
-    - [x] Perform Global Protocol Audit in `ARCHITECT_AUDIT.md`
-    - [x] Update `CLAUDE.md` with Architectural Justification for Next.js 16/Custom Engine
-    - [x] Verify production build stability (`npm run build`)
-    - [x] Finalize "Living Documents" sync
-
-- [x] **Phase 5: Persistence Unification**
-    - [x] Consolidate fragmented `localStorage` keys in `vscodeApi.ts`
-    - [x] Update `browserMock.ts` to use unified `archive-room-config`
-    - [x] Implement legacy key migration path
-    - [x] Sync agent seat persistence across reloads
-    - [x] Verify unified state restoration in browser
-
-- [x] **Phase 6: Architectural Mastery & Reactivity**
-    - [x] Perform Semantic Renaming (Office → Nexus/Archive) across entire codebase
-    - [x] Refactor `ArchiveEngine` and `EditorState` into encapsulated imperative stores
-    - [x] Resolve React Hot-Reloading and Prop Mutation errors via setter methods
-    - [x] Standardize `localStorage` keys to `archive-room-config`
-    - [x] Verify production build stability and dev server hot-reloading
-    - [x] Final sync of Living Documents (`task.md`, `walkthrough.md`, `CLAUDE.md`)
-
-- [x] **Phase 8: Gemini Intelligence & Multi-Step Reasoning**
-    - [x] Initialize FastAPI backend with Gemini 1.5/2.0 integration
-    - [x] Implement **Spatial Manifest** injection for context-aware reasoning
-    - [x] Build **Multi-Step Command Queue** in backend
-    - [x] Synchronize animation completion events via WebSocket bridge
-    - [x] Implement **Auto-PC State** logic for seated agents
-    - [x] Verify multi-target demo (Bookshelf -> Whiteboard -> Bin)
-
-- [x] **Phase 9: Pathfinding Optimization (Smooth Human-Like)**
-    - [x] Implement Smooth A* with Turn Penalties in `tileMap.ts`
-    - [x] Broaden walkability rules (Unlocking 3-tile doorway)
-    - [x] Randomize interaction targets in `ArchiveEngine.ts` (Bookshelf/Whiteboard spread)
-    - [x] Verify agent spread in wide openings
-
-- [x] **Phase 10: Animation & Seating Integrity**
-    - [x] Enforce visual seating ONLY when agent is at their assigned desk
-    - [x] Update `isSeated` state in `characters.ts` during movement and arrival
-
-- [x] **Phase 11: Seat Persistence & Desk Filtering**
-    - [x] Filter out non-desk chairs from the `seats` map in `nexusSerializer.ts`
-    - [x] Ensure `ch.seatId` is preserved during command execution in `ArchiveEngine.ts`
-    - [x] Verify agents return to PC desks after all interactions
+- [ ] **Infrastructure**
+    - [ ] Create `knowledgeStore.ts` for data management
+    - [ ] Implement local-first `knowledge_map.json` handling
+- [x] **UI Development (Elite Overhaul)**
+    - [x] Implement "Elite Archive Executive" design system
+    - [x] Create "Management Blade" (Bottom Toolbar)
+    - [x] Create "Nexus Lens" (Centered Search)
+    - [x] Create "Property Blade" (Knowledge Inspector)
+    - [x] Apply "Magnetic Hover" micro-interactions (Design Spells)
+- [x] **Integration**
+    - [x] Wire up furniture selection in `ArchiveEngine.ts` (Integrated via Canvas)
+    - [x] Mount Inspector in `NexusDashboard.tsx`
+- [ ] **Verification**
+    - [ ] Verify selection logic
+    - [ ] Verify data persistence on refresh

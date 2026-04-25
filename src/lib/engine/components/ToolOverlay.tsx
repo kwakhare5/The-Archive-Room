@@ -168,54 +168,35 @@ export function ToolOverlay({
         const teamRoleLabel = ch.isTeamLead ? 'LEAD' : ch.agentName || null;
         const totalTokens = ch.inputTokens + ch.outputTokens;
         const tokenRatio = totalTokens / MAX_CONTEXT_TOKENS;
-        const hasExtraLines = !!(ch.folderName || teamRoleLabel);
-
-        return (
+        const hasExtraLines = !!(ch.folderName || teamRoleLabel);        return (
           <div
             key={id}
-            className="absolute flex flex-col items-center -translate-x-1/2"
+            className="absolute flex flex-col items-center -translate-x-1/2 pointer-events-none"
             style={{
               left: screenX,
-              top: screenY - (hasExtraLines ? 34 : 28),
-              pointerEvents: isSelected ? 'auto' : 'none',
-              opacity: alwaysShowOverlay && !isSelected && !isHovered ? (isSub ? 0.5 : 0.75) : 1,
+              top: screenY - (hasExtraLines ? 30 : 24),
+              opacity: alwaysShowOverlay && !isSelected && !isHovered ? (isSub ? 0.4 : 0.6) : 1,
               zIndex: isSelected ? 42 : 41,
             }}
           >
-            <div className="flex items-center border-border px-8 pt-2 pb-4 gap-5 pixel-panel whitespace-nowrap max-w-2xs">
+            <div className={`px-4 py-2 flex items-center gap-3 pixel-panel-double bg-bg border-border/60 ${isSelected ? 'pointer-events-auto' : ''}`}>
               {dotColor && (
-                <span
-                  className={`w-6 h-6 rounded-full shrink-0 ${isActive && !hasPermission ? 'pixel-pulse' : ''}`}
+                <div
+                  className={`w-4 h-4 rounded-full shrink-0 ${isActive && !hasPermission ? 'pixel-pulse' : ''}`}
                   style={{ background: dotColor }}
                 />
               )}
-              <div className="flex flex-col gap-0 overflow-hidden">
+              <div className="flex flex-col leading-tight">
                 {teamRoleLabel && (
                   <span
-                    className="overflow-hidden text-ellipsis block leading-none"
-                    style={{
-                      fontSize: '18px',
-                      color: ch.isTeamLead ? TEAM_LEAD_COLOR : TEAM_ROLE_COLOR,
-                      fontWeight: ch.isTeamLead ? 'bold' : undefined,
-                    }}
+                    className="text-[10px] font-bold tracking-[0.2em] uppercase text-accent/60"
                   >
                     {teamRoleLabel}
                   </span>
                 )}
-                <span
-                  className="overflow-hidden text-ellipsis block leading-none"
-                  style={{
-                    fontSize: isSub ? '20px' : '22px',
-                    fontStyle: isSub ? 'italic' : undefined,
-                  }}
-                >
+                <span className="text-[12px] font-bold tracking-widest text-text uppercase">
                   {activityText}
                 </span>
-                {ch.folderName && (
-                  <span className="text-2xs leading-none overflow-hidden text-ellipsis block">
-                    {ch.folderName}
-                  </span>
-                )}
               </div>
               {isSelected && !isSub && (
                 <Button
@@ -225,32 +206,12 @@ export function ToolOverlay({
                     e.stopPropagation();
                     onCloseAgent(id);
                   }}
-                  title="Close agent"
-                  className="ml-2 shrink-0 leading-none"
+                  className="ml-2 w-6 h-6 p-0 text-text-muted hover:text-danger border-none bg-transparent shadow-none"
                 >
                   ×
                 </Button>
               )}
             </div>
-            {isTeamAgent && totalTokens > 0 && (
-              <div
-                style={{
-                  width: FUEL_GAUGE_WIDTH_PX,
-                  height: FUEL_GAUGE_HEIGHT_PX,
-                  background: FUEL_GAUGE_BG,
-                  marginTop: 2,
-                }}
-                title={`${Math.round(tokenRatio * 100)}% context used (${(totalTokens / 1000).toFixed(0)}k tokens)`}
-              >
-                <div
-                  style={{
-                    width: `${Math.min(tokenRatio * 100, 100)}%`,
-                    height: '100%',
-                    background: getFuelColor(tokenRatio),
-                  }}
-                />
-              </div>
-            )}
           </div>
         );
       })}

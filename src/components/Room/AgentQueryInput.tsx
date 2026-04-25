@@ -23,30 +23,36 @@ export function AgentQueryInput({ onQuery, isLoading }: AgentQueryInputProps) {
   }, []);
 
   return (
-    <div className="absolute top-10 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-10">
-      <form 
-        onSubmit={handleSubmit}
-        className="pixel-panel p-4 flex items-center gap-4 bg-bg/90 backdrop-blur-sm border-2 border-accent/50 shadow-2xl"
-      >
-        <span className="text-accent font-bold animate-pulse text-2xl">≫</span>
-        <input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Command the Archive Room..."
-          disabled={isLoading}
-          className="flex-1 bg-transparent border-none outline-none text-text placeholder:text-text/30 font-pixel text-xl"
-        />
-        <Button 
-          type="submit" 
-          variant="accent" 
-          disabled={isLoading || !query.trim()}
-          className="shrink-0"
+    <div className="absolute top-6 left-1/2 -translate-x-1/2 w-full max-w-lg pointer-events-none z-50 flex flex-col items-center">
+      <div className="pixel-blade w-full px-8 flex items-center pointer-events-auto bg-[#1a140f]/80 backdrop-blur-xl border border-white/10">
+        <form 
+          onSubmit={handleSubmit}
+          className="flex items-center gap-4 w-full h-full"
         >
-          {isLoading ? 'THINKING...' : 'DISPATCH'}
-        </Button>
-      </form>
+          <span className="text-[10px] font-bold text-white/20 tracking-[0.4em] uppercase whitespace-nowrap">Command</span>
+          <div className="w-[1px] h-4 bg-white/5" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="INTERROGATE_THE_ARCHIVE..."
+            disabled={isLoading}
+            className="flex-1 bg-transparent border-none outline-none text-xs text-white/60 placeholder:text-white/10 uppercase tracking-[0.2em] font-mono h-full"
+          />
+          <div className="flex items-center gap-3">
+            {isLoading && <div className="w-1.5 h-1.5 bg-accent animate-pulse" />}
+            <Button 
+              type="submit" 
+              variant="ghost" 
+              disabled={isLoading || !query.trim()}
+              className="text-[9px] font-mono text-white/20 hover:text-white/60 tracking-widest px-0 h-auto"
+            >
+              {isLoading ? 'WORKING...' : 'EXECUTE'}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

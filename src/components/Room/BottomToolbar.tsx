@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
-
-import type { WorkspaceFolder } from '@/hooks/useExtensionMessages';
-import { vscode } from '../../lib/engine/vscodeApi';
+import { useState } from 'react';
 import { Button } from '../ui/Button';
-import { Dropdown, DropdownItem } from '../ui/Dropdown';
+import { Dropdown } from '../ui/Dropdown';
+import { vscode } from '../../lib/engine/vscodeApi';
+import type { WorkspaceFolder } from '@/hooks/useExtensionMessages';
 
 interface BottomToolbarProps {
   isEditMode: boolean;
@@ -16,123 +15,58 @@ interface BottomToolbarProps {
 }
 
 export function BottomToolbar({
-  isEditMode,
-  onOpenClaude,
-  onToggleEditMode,
-  isSettingsOpen,
-  onToggleSettings,
   workspaceFolders,
-  isLocked,
+  onToggleSettings,
 }: BottomToolbarProps) {
-  const [isFolderPickerOpen, setIsFolderPickerOpen] = useState(false);
-  const [isBypassMenuOpen, setIsBypassMenuOpen] = useState(false);
-  const folderPickerRef = useRef<HTMLDivElement>(null);
-  const pendingBypassRef = useRef(false);
-  // Close folder picker / bypass menu on outside click
-  useEffect(() => {
-    if (!isFolderPickerOpen && !isBypassMenuOpen) return;
-    const handleClick = (e: MouseEvent) => {
-      if (folderPickerRef.current && !folderPickerRef.current.contains(e.target as Node)) {
-        setIsFolderPickerOpen(false);
-        setIsBypassMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [isFolderPickerOpen, isBypassMenuOpen]);
-
-  const hasMultipleFolders = workspaceFolders.length > 1;
-
-  const handleAgentClick = () => {
-    setIsBypassMenuOpen(false);
-    pendingBypassRef.current = false;
-    if (hasMultipleFolders) {
-      setIsFolderPickerOpen((v) => !v);
-    } else {
-      onOpenClaude();
-    }
-  };
-
-  const handleAgentHover = () => {
-    if (!isFolderPickerOpen) {
-      setIsBypassMenuOpen(true);
-    }
-  };
-
-  const handleAgentLeave = () => {
-    if (!isFolderPickerOpen) {
-      setIsBypassMenuOpen(false);
-    }
-  };
-
-  const handleFolderSelect = (folder: WorkspaceFolder) => {
-    setIsFolderPickerOpen(false);
-    const bypassPermissions = pendingBypassRef.current;
-    pendingBypassRef.current = false;
-    vscode.postMessage({ type: 'openClaude', folderPath: folder.path, bypassPermissions });
-  };
-
-  const handleBypassSelect = (bypassPermissions: boolean) => {
-    setIsBypassMenuOpen(false);
-    if (hasMultipleFolders) {
-      pendingBypassRef.current = bypassPermissions;
-      setIsFolderPickerOpen(true);
-    } else {
-      vscode.postMessage({ type: 'openClaude', bypassPermissions });
-    }
-  };
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   return (
-    <div className="absolute bottom-10 left-10 z-20 flex items-center gap-4 pixel-panel p-4">
-      <div
-        ref={folderPickerRef}
-        className="relative"
-        onMouseEnter={handleAgentHover}
-        onMouseLeave={handleAgentLeave}
-      >
-        <Button
-          variant="accent"
-          onClick={handleAgentClick}
-          className={
-            isFolderPickerOpen || isBypassMenuOpen
-              ? 'bg-accent-bright'
-              : 'bg-accent hover:bg-accent-bright'
-          }
+    <div className="absolute bottom-12 right-12 z-50 pointer-events-none">
+      <div className="group pointer-events-auto flex flex-row-reverse items-center">
+        {/* The Trigger Square (Always Visible) - Solid Dark Obsidian */}
+        <div 
+          className="w-12 h-12 bg-[#1a140f] border border-white/20 flex items-center justify-center rounded-sm shadow-[8px_8px_0px_rgba(0,0,0,0.2)] cursor-pointer group-hover:bg-[#1a140f]/90 transition-all z-10"
         >
-          + Agent
-        </Button>
-        <Dropdown isOpen={isBypassMenuOpen}>
-          <DropdownItem onClick={() => handleBypassSelect(true)}>
-            Skip permissions mode <span className="text-2xs text-warning">⚠</span>
-          </DropdownItem>
-        </Dropdown>
-        <Dropdown isOpen={isFolderPickerOpen} className="min-w-128">
-          {workspaceFolders.map((folder) => (
-            <DropdownItem
-              key={folder.path}
-              onClick={() => handleFolderSelect(folder)}
-              className="text-base"
+          <span className="text-white/60 font-black text-lg leading-none">+</span>
+        </div>
+
+        {/* The Sliding Menu (Revealed on Hover) */}
+        <div className="flex items-center gap-2 overflow-hidden max-w-0 group-hover:max-w-md group-hover:pr-3 transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100">
+          <Button
+            variant="default"
+            onClick={onToggleSettings}
+            className="h-10 px-6 bg-[#1a140f] text-white/60 border border-white/10 hover:border-white/40 hover:text-white text-[10px] command-text rounded-sm whitespace-nowrap"
+          >
+            SETTINGS
+          </Button>
+
+          <div className="relative">
+            <Button
+              variant="default"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="h-10 px-8 bg-[#1a140f] text-white/80 border border-white/10 hover:border-white/40 hover:text-white text-[10px] font-black command-text rounded-sm whitespace-nowrap shadow-xl"
             >
-              {folder.name}
-            </DropdownItem>
-          ))}
-        </Dropdown>
+              DISPATCH_AGENT
+            </Button>
+
+            <Dropdown isOpen={isDropdownOpen} className="w-56 p-2 bg-[#1a140f] border-2 border-white/10 flex flex-col gap-1 shadow-2xl rounded-sm absolute bottom-full mb-4 right-0">
+              <div className="px-3 py-2 text-[9px] text-white/20 uppercase tracking-widest border-b border-white/5 mb-1 font-mono text-center">Archive_Project_Node</div>
+              {workspaceFolders.map((folder) => (
+                <button
+                  key={folder.path}
+                  className="w-full text-left p-3 text-[10px] text-white/40 hover:text-white hover:bg-white/5 transition-all uppercase tracking-widest font-mono"
+                  onClick={() => {
+                    vscode.postMessage({ type: 'spawnAgent', folderPath: folder.path, folderName: folder.name });
+                    setIsDropdownOpen(false);
+                  }}
+                >
+                  {folder.name}
+                </button>
+              ))}
+            </Dropdown>
+          </div>
+        </div>
       </div>
-      <Button
-        variant={isEditMode ? 'active' : 'default'}
-        onClick={onToggleEditMode}
-        title={isLocked ? 'Layout is locked' : 'Edit archive layout'}
-        className={isLocked ? 'opacity-50 cursor-not-allowed grayscale' : ''}
-      >
-        {isLocked ? '🔒 Layout' : 'Layout'}
-      </Button>
-      <Button
-        variant={isSettingsOpen ? 'active' : 'default'}
-        onClick={onToggleSettings}
-        title="Settings"
-      >
-        Settings
-      </Button>
     </div>
   );
 }

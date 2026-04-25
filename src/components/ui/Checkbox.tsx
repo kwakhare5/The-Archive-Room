@@ -13,9 +13,9 @@ export function Checkbox({ checked, onChange, label, className = '' }: CheckboxP
     >
       <span>{label}</span>
       <span
-        className={`w-14 h-14 border-2 border-white/50 rounded-none shrink-0 flex items-center justify-center text-2xs pl-1.5 pb-4 leading-none text-white ${checked ? 'bg-accent' : 'bg-transparent'}`}
+        className={`w-14 h-14 border border-border rounded-none shrink-0 flex items-center justify-center text-xs pb-4 leading-none transition-colors ${checked ? 'bg-accent text-white border-accent' : 'bg-bg-dark text-transparent'}`}
       >
-        {checked ? 'x' : ''}
+        {checked ? '×' : ''}
       </span>
     </button>
   );

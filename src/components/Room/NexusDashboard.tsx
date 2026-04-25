@@ -19,6 +19,8 @@ import { ZoomControls } from '../ZoomControls';
 import { ToolOverlay } from '@/lib/engine/components/ToolOverlay';
 import { EditorToolbar } from '@/lib/engine/editor/EditorToolbar';
 import { AgentQueryInput } from './AgentQueryInput';
+import { KnowledgeInspector } from './KnowledgeInspector';
+import { knowledgeStore, type KnowledgeMap } from '@/lib/engine/knowledgeStore';
 
 /**
  * 🚨 UI IMMUTABILITY LOCK: NexusDashboard
@@ -68,6 +70,41 @@ export default function NexusDashboard() {
 
   const [migrationNoticeDismissed, setMigrationNoticeDismissed] = useState(false);
   const showMigrationNotice = layoutWasReset && !migrationNoticeDismissed;
+
+  // --- KNOWLEDGE ENGINE (Persistence) ---
+  const [knowledgeMap, setKnowledgeMap] = useState<KnowledgeMap>({});
+  const [selectedFurniture, setSelectedFurniture] = useState<{ id: string; name: string } | null>(null);
+
+  useEffect(() => {
+    // Initial load of the Thought Tree
+    setKnowledgeMap(knowledgeStore.load());
+  }, []);
+
+  const handlePlantNote = (content: string) => {
+    if (!selectedFurniture) return;
+    knowledgeStore.plant(selectedFurniture.id, content);
+    setKnowledgeMap(knowledgeStore.load()); // Refresh local state
+  };
+
+  const handleFurnitureSelect = useCallback((id: string, name: string) => {
+    console.log(`[Palace] Focused on object: ${name} (${id})`);
+    setSelectedFurniture({ id, name });
+  }, []);
+
+  // --- AUTO-STAFFING (Zero-Friction Resident Model) ---
+  const hasAutoDispatched = useRef(false);
+  useEffect(() => {
+    if (layoutReady && workspaceFolders.length > 0 && agents.length === 0 && !hasAutoDispatched.current) {
+      console.log('[Resident Staff] Auto-dispatching primary Librarian...');
+      const primaryFolder = workspaceFolders[0];
+      vscode.postMessage({ 
+        type: 'spawnAgent', 
+        folderPath: primaryFolder.path, 
+        folderName: primaryFolder.name 
+      });
+      hasAutoDispatched.current = true;
+    }
+  }, [layoutReady, workspaceFolders, agents.length]);
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   // Use alwaysShowLabels directly from hook to avoid cascading renders
@@ -138,6 +175,7 @@ export default function NexusDashboard() {
     vscode.postMessage({ type: 'focusAgent', id: agentId });
   }, []);
 
+
   // Connect WebSocket bridge
   useEffect(() => {
     if (layoutReady) {
@@ -172,9 +210,18 @@ export default function NexusDashboard() {
         onZoomChange={editor.handleZoomChange}
         panRef={editor.panRef}
         assetsLoaded={assetsLoaded}
+        onFurnitureSelect={handleFurnitureSelect}
       />
 
       <AgentQueryInput onQuery={handleAgentQuery} isLoading={isQuerying} />
+
+      <KnowledgeInspector 
+        furnitureId={selectedFurniture?.id ?? null}
+        furnitureName={selectedFurniture?.name ?? null}
+        notes={selectedFurniture ? (knowledgeMap[selectedFurniture.id] || []) : []}
+        onClose={() => setSelectedFurniture(null)}
+        onPlantNote={handlePlantNote}
+      />
 
       {/* Vignette overlay */}
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'var(--vignette)' }} />
