@@ -58,3 +58,12 @@
     - [x] Broaden walkability rules (Unlocking 3-tile doorway)
     - [x] Randomize interaction targets in `ArchiveEngine.ts` (Bookshelf/Whiteboard spread)
     - [x] Verify agent spread in wide openings
+
+- [x] **Phase 10: Animation & Seating Integrity**
+    - [x] Enforce visual seating ONLY when agent is at their assigned desk
+    - [x] Update `isSeated` state in `characters.ts` during movement and arrival
+
+- [x] **Phase 11: Seat Persistence & Desk Filtering**
+    - [x] Filter out non-desk chairs from the `seats` map in `nexusSerializer.ts`
+    - [x] Ensure `ch.seatId` is preserved during command execution in `ArchiveEngine.ts`
+    - [x] Verify agents return to PC desks after all interactions

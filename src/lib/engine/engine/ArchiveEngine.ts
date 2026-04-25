@@ -96,9 +96,9 @@ export class ArchiveEngine {
 
     // First pass: try to keep characters at their existing seats
     for (const ch of this.characters.values()) {
-      if (ch.seatId && this.seats.has(ch.seatId)) {
-        const seat = this.seats.get(ch.seatId)!;
-        if (!seat.assigned) {
+      if (ch.seatId) {
+        const seat = this.seats.get(ch.seatId);
+        if (seat && !seat.assigned) {
           seat.assigned = true;
           // Snap character to seat position
           ch.tileCol = seat.seatCol;
@@ -590,13 +590,9 @@ export class ArchiveEngine {
       if (path.length > 0) {
         // Walk to target, then the WALK handler will need to know what to do on arrival.
         // We store the pending state on the character for the arrival handler.
-        // Clear seated state before moving to prevent "standing on chair" glitch
-        if (ch.seatId) {
-          const seat = this.seats.get(ch.seatId);
-          if (seat) seat.assigned = false;
-        }
+        // NOTE: We DO NOT clear ch.seatId here because we want the agent to return
+        // to their assigned desk after the command is complete.
         ch.isSeated = false;
-        ch.seatId = null;
 
         ch.path = path;
         ch.moveProgress = 0;

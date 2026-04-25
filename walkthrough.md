@@ -25,6 +25,14 @@ Successfully transformed the Memory Palace into a connected **Data Nexus** by in
 - **Interaction Target Spread**: Added a randomization step to furniture target resolution in `ArchiveEngine.ts`. Agents will now randomly choose between the left and right sides of multi-tile objects like Bookshelves and Whiteboards, preventing the "left-side funneling" behavior.
 - **Diagnostic Verification**: Confirmed code deployment via a subtle floor color hue shift in `nexusSerializer.ts`.
 
+### 5. Animation & Seating Integrity
+- **Physical Seating Check**: Updated `updateCharacter` to dynamically set the `isSeated` flag based on whether the agent is physically on their assigned seat tile. 
+- **Animation Correction**: Agents will now correctly show the standing animation when interacting with books or whiteboards, and only use the "seated" animation when they arrive back at their PC desk.
+
+### 6. Seat Persistence & Desk Filtering
+- **Desk-Only Seats**: Updated `nexusSerializer.ts` to filter out any chairs that are not adjacent to a desk. This prevents agents from being assigned to "lounge" or "decorative" seating.
+- **Permanent Assignments**: Removed the logic that cleared `seatId` during command execution. Agents now maintain their desk assignment throughout their entire lifecycle, ensuring they always have a home to return to after work.
+
 ## Final State
 - **Backend Port**: `8765`
 - **Model**: `gemini-flash-latest`

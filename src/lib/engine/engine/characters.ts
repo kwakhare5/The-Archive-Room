@@ -53,7 +53,7 @@ export function createCharacter(
   const center = tileCenter(col, row);
   return {
     id,
-    state: CharacterState.IDLE,
+    state: seat ? CharacterState.TYPE : CharacterState.IDLE,
     dir: seat ? seat.facingDir : Direction.DOWN,
     x: center.x,
     y: center.y,
@@ -116,6 +116,19 @@ export function updateCharacter(
     }
 
     case CharacterState.IDLE: {
+      // If agent is on their seat, transition to TYPE state (seated)
+      if (ch.seatId) {
+        const seat = seats.get(ch.seatId);
+        if (seat && ch.tileCol === seat.seatCol && ch.tileRow === seat.seatRow) {
+          ch.state = CharacterState.TYPE;
+          ch.isSeated = true;
+          ch.dir = seat.facingDir;
+          ch.frame = 0;
+          ch.frameTimer = 0;
+          break;
+        }
+      }
+
       // No idle animation — static pose
       ch.frame = 0;
       if (ch.seatTimer < 0) ch.seatTimer = 0; // clear turn-end sentinel
@@ -142,20 +155,54 @@ export function updateCharacter(
             ch.path = path;
             ch.moveProgress = 0;
             ch.state = CharacterState.WALK;
+            ch.isSeated = false;
             ch.frame = 0;
             ch.frameTimer = 0;
           } else {
             // Already at seat or no path — sit down
             ch.state = CharacterState.TYPE;
+            ch.isSeated = true;
             ch.dir = seat.facingDir;
             ch.frame = 0;
             ch.frameTimer = 0;
           }
         }
-        break;
       }
-      // Just stand in place when idle.
-      // Agents only move when explicitly commanded by the EventBridge.
+
+      // If agent has no seat, implement human-like "browsing" behavior
+      if (ch.isActive && !ch.seatId) {
+        // Increment a timer for roaming decisions
+        ch.seatTimer += dt;
+        
+        // Every 15-30 seconds, pick a new spot to "browse"
+        const nextRoamTime = 15 + (ch.id % 15); 
+        if (ch.seatTimer >= nextRoamTime) {
+          ch.seatTimer = 0;
+          if (_walkableTiles.length > 0) {
+            // Pick a random walkable tile to walk to
+            const target = _walkableTiles[Math.floor(Math.random() * _walkableTiles.length)];
+            const path = findPath(
+              ch.tileCol,
+              ch.tileRow,
+              target.col,
+              target.row,
+              tileMap,
+              blockedTiles
+            );
+            if (path.length > 0) {
+              ch.path = path;
+              ch.moveProgress = 0;
+              ch.state = CharacterState.WALK;
+              ch.isSeated = false;
+              ch.frame = 0;
+              ch.frameTimer = 0;
+              break;
+            }
+          }
+        }
+      }
+
+      // Agents only move when seatless browsing triggers or explicitly commanded
       break;
     }
 
@@ -193,6 +240,7 @@ export function updateCharacter(
               ch.path = path;
               ch.moveProgress = 0;
               ch.state = CharacterState.WALK;
+              ch.isSeated = false;
               ch.frame = 0;
               ch.frameTimer = 0;
               break;
@@ -222,6 +270,7 @@ export function updateCharacter(
         // --- Command-Driven Arrival ---
         // If we were walking to a furniture target for a command, enter interaction state
         if (ch.activeCommand && ch.interactionTimer > 0) {
+          ch.isSeated = false; // Always standing during command arrival unless it's their desk
           const commandStateMap: Record<string, CharacterState> = {
             RAG_SEARCH:    CharacterState.READING,
             FETCH_MEMORY:  CharacterState.READING,
@@ -250,13 +299,16 @@ export function updateCharacter(
         if (ch.isActive) {
           if (!ch.seatId) {
             ch.state = CharacterState.TYPE;
+            ch.isSeated = false;
           } else {
             const seat = seats.get(ch.seatId);
             if (seat && ch.tileCol === seat.seatCol && ch.tileRow === seat.seatRow) {
               ch.state = CharacterState.TYPE;
+              ch.isSeated = true;
               ch.dir = seat.facingDir;
             } else {
               ch.state = CharacterState.IDLE;
+              ch.isSeated = false;
             }
           }
         } else {
@@ -264,14 +316,16 @@ export function updateCharacter(
             const seat = seats.get(ch.seatId);
             if (seat && ch.tileCol === seat.seatCol && ch.tileRow === seat.seatRow) {
               ch.state = CharacterState.TYPE;
+              ch.isSeated = true;
               ch.dir = seat.facingDir;
               ch.seatTimer = 0;
               ch.frame = 0;
               ch.frameTimer = 0;
-              break;
+              return;
             }
           }
           ch.state = CharacterState.IDLE;
+          ch.isSeated = false;
         }
         ch.frame = 0;
         ch.frameTimer = 0;
@@ -329,6 +383,11 @@ export function updateCharacter(
 /** Get the correct sprite frame for a character's current state and direction */
 export function getCharacterSprite(ch: Character, sprites: CharacterSprites): SpriteData {
   switch (ch.state) {
+    case CharacterState.IDLE:
+      if (ch.isSeated) {
+        return sprites.typing[ch.dir][0]; // Show sitting frame 0
+      }
+      return sprites.walk[ch.dir][1];
     case CharacterState.TYPE:
       if (ch.isSeated) {
         if (isReadingTool(ch.currentTool)) {
@@ -350,7 +409,6 @@ export function getCharacterSprite(ch: Character, sprites: CharacterSprites): Sp
       // Discarding at bin — use sitting frames ONLY if actually seated
       if (ch.isSeated) return sprites.typing[ch.dir][ch.frame % 2];
       return sprites.walk[ch.dir][1];
-    case CharacterState.IDLE:
     default:
       return sprites.walk[ch.dir][1];
   }

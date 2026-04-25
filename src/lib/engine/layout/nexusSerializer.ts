@@ -165,11 +165,20 @@ function orientationToFacing(orientation: string): Direction {
 export function archiveToSeats(furniture: PlacedFurniture[]): Map<string, Seat> {
   const seats = new Map<string, Seat>();
 
-  // Build set of all desk tiles
+  // Build set of all valid "Work Desk" tiles.
+  // We include Desks and Electronics (PCs, monitors) to ensure all workstations are found.
   const deskTiles = new Set<string>();
   for (const item of furniture) {
     const entry = getCatalogEntry(item.type);
-    if (!entry || !entry.isDesk) continue;
+    if (!entry) continue;
+
+    // A tile is a "Desk" if it's a Desk category OR Electronics category (PC)
+    const isDeskType = entry.isDesk || entry.category === 'electronics';
+    
+    // We still exclude Bookshelves/Walls to keep the user's "PC Desk only" rule
+    const isBookshelf = entry.type?.includes('BOOKSHELF') || entry.category === 'wall';
+    if (!isDeskType || isBookshelf) continue;
+
     for (let dr = 0; dr < entry.footprintH; dr++) {
       for (let dc = 0; dc < entry.footprintW; dc++) {
         deskTiles.add(`${item.col + dc},${item.row + dr}`);
@@ -198,20 +207,20 @@ export function archiveToSeats(furniture: PlacedFurniture[]): Map<string, Seat> 
         const tileRow = item.row + dr;
 
         // Determine facing direction:
-        // 1) Chair orientation takes priority
-        // 2) Adjacent desk direction
-        // 3) Default forward (DOWN)
+        // ONLY create seats for chairs that are adjacent to a desk.
+        // This ensures agents are always seated at a PC desk.
+        let deskAdjacent = false;
         let facingDir: Direction = Direction.DOWN;
-        if (entry.orientation) {
-          facingDir = orientationToFacing(entry.orientation);
-        } else {
-          for (const d of dirs) {
-            if (deskTiles.has(`${tileCol + d.dc},${tileRow + d.dr}`)) {
-              facingDir = d.facing;
-              break;
-            }
+        for (const d of dirs) {
+          if (deskTiles.has(`${tileCol + d.dc},${tileRow + d.dr}`)) {
+            facingDir = d.facing;
+            deskAdjacent = true;
+            break;
           }
         }
+
+        // If not adjacent to a desk, skip this chair tile as a workspace seat
+        if (!deskAdjacent) continue;
 
         // First seat uses chair uid (backward compat), subsequent use uid:N
         const seatUid = seatCount === 0 ? item.uid : `${item.uid}:${seatCount}`;
