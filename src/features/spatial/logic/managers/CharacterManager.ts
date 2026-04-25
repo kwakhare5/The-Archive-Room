@@ -56,7 +56,7 @@ export class CharacterManager {
   public updateCharacters(deltaTimeMs: number, tileMap: TileTypeVal[][], blockedTiles: Set<string>): void {
     const dt = deltaTimeMs / 1000;
     for (const [id, ch] of this.characters) {
-      updateCharacter(ch, dt);
+      updateCharacter(ch, dt, [], new Map(), tileMap, blockedTiles);
       
       if (ch.matrixEffect === 'despawn' && ch.matrixEffectTimer >= 1.5) {
         this.characters.delete(id);
