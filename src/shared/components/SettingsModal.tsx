@@ -131,12 +131,6 @@ export function SettingsModal({
           onChange={onToggleAlwaysShowOverlay}
           className="text-[10px] tracking-[0.2em]"
         />
-        <Checkbox 
-          label="DEBUG OVERLAY" 
-          checked={isDebugMode} 
-          onChange={onToggleDebugMode} 
-          className="text-[10px] tracking-[0.2em]"
-        />
       </div>
     </Modal>
   );

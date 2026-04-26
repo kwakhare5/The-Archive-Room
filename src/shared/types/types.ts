@@ -237,6 +237,13 @@ export interface Character {
   /** Workspace folder name (only set for multi-root workspaces) */
   folderName?: string;
 
+  /** Observer: The specific furniture UID the agent is walking towards */
+  targetUid: string | null;
+  /** Observer: The specific command that triggered this movement */
+  pendingCommand: string | null;
+  /** Observer: The specific state transition intended after arrival */
+  pendingState: CharacterState | null;
+
   // -- Agent Teams --
   /** Team name this agent belongs to */
   teamName?: string;

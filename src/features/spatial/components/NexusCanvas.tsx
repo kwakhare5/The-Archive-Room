@@ -828,7 +828,7 @@ export function NexusCanvas({
   return (
     <div ref={containerRef} className="w-full h-full relative overflow-hidden bg-bg">
       {!isReady && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-bg text-text-muted font-pixel text-lg">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-bg text-text-muted font-sans text-lg">
           <div className="flex flex-col items-center gap-4">
             <div className="animate-pulse">Loading Assets...</div>
           </div>

@@ -24,7 +24,7 @@ export function Modal({
 
   return (
     <>
-      <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-[2px]" style={{ zIndex }} onClick={onClose} />
+      <div className="fixed inset-0 bg-[#4a3728]/40 backdrop-blur-[2px]" style={{ zIndex }} onClick={onClose} />
       <div
         className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-bg border border-border rounded-none shadow-pixel p-2 min-w-xs ${className}`}
         style={{ zIndex: zIndex + 1 }}

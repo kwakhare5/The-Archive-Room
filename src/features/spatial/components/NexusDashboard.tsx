@@ -10,16 +10,17 @@ import { useEditorActions } from '@/features/editor/hooks/useEditorActions';
 import { useEditorKeyboard } from '@/features/editor/hooks/useEditorKeyboard';
 import { isBrowserRuntime } from '@/shared/lib/engine/runtime';
 import { vscode } from '@/shared/lib/apiBridge';
+import { cn } from '@/lib/utils';
 
 // UI Components
 import { BottomToolbar } from '@/shared/components/BottomToolbar';
-import { MigrationNotice } from '@/shared/components/MigrationNotice';
 import { SettingsModal } from '@/shared/components/SettingsModal';
 import { ZoomControls } from '@/features/spatial/components/ZoomControls';
 import { EditorToolbar } from '@/features/editor/components/EditorToolbar';
-import { AgentQueryInput } from '@/features/agents/components/AgentQueryInput';
-import { KnowledgeInspector } from '@/features/agents/components/KnowledgeInspector';
+import { ArchiveChatPanel } from '@/features/agents/components/ArchiveChatPanel';
+import { Button } from '@/shared/components/ui/Button';
 import { knowledgeStore, type KnowledgeMap } from '@/shared/lib/engine/knowledgeStore';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 /**
  * 🚨 UI IMMUTABILITY LOCK: NexusDashboard
@@ -105,7 +106,6 @@ export default function NexusDashboard() {
     }
   }, [layoutReady, workspaceFolders, agents.length]);
 
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   // Use alwaysShowLabels directly from hook to avoid cascading renders
   const showOverlay = alwaysShowLabels;
 
@@ -115,6 +115,8 @@ export default function NexusDashboard() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [isQuerying, setIsQuerying] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const handleAgentQuery = useCallback(async (query: string) => {
     setIsQuerying(true);
@@ -185,91 +187,119 @@ export default function NexusDashboard() {
 
   if (!layoutReady) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-bg font-pixel text-base text-text">
+      <div className="w-full h-full flex items-center justify-center bg-bg font-mono text-base text-text">
         INITIATING THE ARCHIVE ROOM...
       </div>
     );
   }
 
   return (
-    <div ref={containerRef} className="w-full h-screen relative overflow-hidden bg-bg font-pixel">
-      <NexusCanvas
-        archiveEngine={archiveEngine}
-        onClick={handleClick}
-        isEditMode={editor.isEditMode}
-        editorState={editorState}
-        onEditorTileAction={editor.handleEditorTileAction}
-        onEditorEraseAction={editor.handleEditorEraseAction}
-        onEditorSelectionChange={editor.handleEditorSelectionChange}
-        onDeleteSelected={editor.handleDeleteSelected}
-        onRotateSelected={editor.handleRotateSelected}
-        onDragMove={editor.handleDragMove}
-        editorTick={editor.editorTick}
-        zoom={editor.zoom}
-        onZoomChange={editor.handleZoomChange}
-        panRef={editor.panRef}
-        assetsLoaded={assetsLoaded}
-        onFurnitureSelect={handleFurnitureSelect}
-      />
+    <div ref={containerRef} className="flex h-screen w-full overflow-hidden bg-bg font-mono selection:bg-accent/30">
+      {/* Primary Interaction Zone (The Map) */}
+      <div className="flex-1 relative h-full overflow-hidden flex flex-col">
+        <div className="flex-1 relative overflow-hidden">
+          <NexusCanvas
+            archiveEngine={archiveEngine}
+            onClick={handleClick}
+            isEditMode={editor.isEditMode}
+            editorState={editorState}
+            onEditorTileAction={editor.handleEditorTileAction}
+            onEditorEraseAction={editor.handleEditorEraseAction}
+            onEditorSelectionChange={editor.handleEditorSelectionChange}
+            onDeleteSelected={editor.handleDeleteSelected}
+            onRotateSelected={editor.handleRotateSelected}
+            onDragMove={editor.handleDragMove}
+            editorTick={editor.editorTick}
+            zoom={editor.zoom}
+            onZoomChange={editor.handleZoomChange}
+            panRef={editor.panRef}
+            assetsLoaded={assetsLoaded}
+            onFurnitureSelect={handleFurnitureSelect}
+          />
 
-      <AgentQueryInput onQuery={handleAgentQuery} isLoading={isQuerying} />
+          {/* Sidebar Toggle Button (Luxury Glass Design) */}
+          <Button
+            variant="ghost"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className={cn(
+              "absolute top-1/2 -translate-y-1/2 right-0 z-50 h-20 w-1 bg-bg border-l border-y border-border hover:w-2 hover:bg-accent/40 transition-all duration-300 group shadow-2xl rounded-none p-0",
+              !isSidebarOpen && "right-[-1px]"
+            )}
+          >
+            <div className={`absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-bg border border-border rounded-none transition-all duration-300 opacity-0 group-hover:opacity-100 flex items-center gap-2 font-mono
+              ${isSidebarOpen ? 'rotate-0' : 'rotate-180'}`}>
+              <ChevronRight className="w-3 h-3 text-text-muted" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted whitespace-nowrap">
+                {isSidebarOpen ? 'CLOSE_NEXUS' : 'OPEN_NEXUS'}
+              </span>
+            </div>
+          </Button>
 
-      <KnowledgeInspector 
-        furnitureId={selectedFurniture?.id ?? null}
-        furnitureName={selectedFurniture?.name ?? null}
-        notes={selectedFurniture ? (knowledgeMap[selectedFurniture.id] || []) : []}
-        onClose={() => setSelectedFurniture(null)}
-        onPlantNote={handlePlantNote}
-      />
+          {/* Vignette overlay (Local to Map) */}
+          <div className="absolute inset-0 pointer-events-none" style={{ background: 'var(--vignette)' }} />
 
-      {/* Vignette overlay */}
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'var(--vignette)' }} />
+          {editor.isEditMode &&
+            (() => {
+              const selUid = editorState.selectedFurnitureUid;
+              const selColor = selUid
+                ? (archiveEngine.getLayout().furniture.find((f) => f.uid === selUid)?.color ?? null)
+                : null;
+              return (
+                <EditorToolbar
+                  activeTool={editorState.activeTool}
+                  selectedTileType={editorState.selectedTileType}
+                  selectedFurnitureType={editorState.selectedFurnitureType}
+                  selectedFurnitureUid={selUid}
+                  selectedFurnitureColor={selColor}
+                  floorColor={editorState.floorColor}
+                  wallColor={editorState.wallColor}
+                  selectedWallSet={editorState.selectedWallSet}
+                  onToolChange={editor.handleToolChange}
+                  onTileTypeChange={editor.handleTileTypeChange}
+                  onFloorColorChange={editor.handleFloorColorChange}
+                  onWallColorChange={editor.handleWallColorChange}
+                  onWallSetChange={editor.handleWallSetChange}
+                  onSelectedFurnitureColorChange={editor.handleSelectedFurnitureColorChange}
+                  onFurnitureTypeChange={editor.handleFurnitureTypeChange}
+                  onUndo={editor.handleUndo}
+                  onRedo={editor.handleRedo}
+                  onFactoryReset={editor.handleFactoryReset}
+                  onSave={editor.handleSave}
+                  onToggleLock={editor.handleToggleLock}
+                  isLocked={!!archiveEngine.getLayout().isLocked}
+                  loadedAssets={loadedAssets}
+                />
+              );
+            })()}
 
-      {editor.isEditMode &&
-        (() => {
-          const selUid = editorState.selectedFurnitureUid;
-          const selColor = selUid
-            ? (archiveEngine.getLayout().furniture.find((f) => f.uid === selUid)?.color ?? null)
-            : null;
-          return (
-            <EditorToolbar
-              activeTool={editorState.activeTool}
-              selectedTileType={editorState.selectedTileType}
-              selectedFurnitureType={editorState.selectedFurnitureType}
-              selectedFurnitureUid={selUid}
-              selectedFurnitureColor={selColor}
-              floorColor={editorState.floorColor}
-              wallColor={editorState.wallColor}
-              selectedWallSet={editorState.selectedWallSet}
-              onToolChange={editor.handleToolChange}
-              onTileTypeChange={editor.handleTileTypeChange}
-              onFloorColorChange={editor.handleFloorColorChange}
-              onWallColorChange={editor.handleWallColorChange}
-              onWallSetChange={editor.handleWallSetChange}
-              onSelectedFurnitureColorChange={editor.handleSelectedFurnitureColorChange}
-              onFurnitureTypeChange={editor.handleFurnitureTypeChange}
-              onUndo={editor.handleUndo}
-              onRedo={editor.handleRedo}
-              onFactoryReset={editor.handleFactoryReset}
-              onSave={editor.handleSave}
-              onToggleLock={editor.handleToggleLock}
-              isLocked={!!archiveEngine.getLayout().isLocked}
-              loadedAssets={loadedAssets}
-            />
-          );
-        })()}
+          <ZoomControls zoom={editor.zoom} onZoomChange={editor.handleZoomChange} />
 
-      <ZoomControls zoom={editor.zoom} onZoomChange={editor.handleZoomChange} />
+          <BottomToolbar
+            isEditMode={editor.isEditMode}
+            onToggleEditMode={editor.handleToggleEditMode}
+            onToggleSettings={() => setIsSettingsOpen((v) => !v)}
+            workspaceFolders={workspaceFolders}
+          />
+        </div>
+      </div>
 
-      <BottomToolbar
-        isEditMode={editor.isEditMode}
-        onOpenClaude={editor.handleOpenClaude}
-        onToggleEditMode={editor.handleToggleEditMode}
-        isSettingsOpen={isSettingsOpen}
-        onToggleSettings={() => setIsSettingsOpen((v) => !v)}
-        workspaceFolders={workspaceFolders}
-        isLocked={!!archiveEngine.getLayout().isLocked}
-      />
+      {/* Intelligence Nexus (The Command Panel) */}
+      <div 
+        className={`h-full transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] overflow-hidden border-l border-border
+          ${isSidebarOpen ? 'w-[500px] opacity-100' : 'w-0 opacity-0'}`}
+      >
+        <div className="w-[500px] h-full">
+          <ArchiveChatPanel 
+            furnitureId={selectedFurniture?.id ?? null}
+            furnitureName={selectedFurniture?.name ?? null}
+            notes={selectedFurniture ? (knowledgeMap[selectedFurniture.id] || []) : []}
+            onCloseContext={() => setSelectedFurniture(null)}
+            onPlantNote={handlePlantNote}
+            onQuery={handleAgentQuery}
+            isLoading={isQuerying}
+          />
+        </div>
+      </div>
 
       <SettingsModal
         isOpen={isSettingsOpen}
@@ -293,9 +323,6 @@ export default function NexusDashboard() {
         }}
       />
 
-      {showMigrationNotice && (
-        <MigrationNotice onDismiss={() => setMigrationNoticeDismissed(true)} />
-      )}
     </div>
   );
 }

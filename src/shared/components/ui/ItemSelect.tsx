@@ -42,12 +42,18 @@ export function ItemSelect({
     <button
       onClick={onClick}
       title={title}
-      className={`p-0 rounded-none cursor-pointer overflow-hidden shrink-0 border-2 flex items-center justify-center ${
-        selected ? 'border-accent' : 'border-transparent'
+      className={`p-1 rounded-sm cursor-pointer overflow-hidden shrink-0 border-2 transition-all pixel-magnetic ${
+        selected 
+          ? 'border-accent bg-accent/10 shadow-[0_0_8px_rgba(217,119,6,0.2)]' 
+          : 'border-border/40 bg-bg-dark/20 hover:border-border'
       }`}
-      style={{ width, height }}
+      style={{ width: width + 8, height: height + 8 }}
     >
-      <canvas ref={canvasRef} style={{ width, height, display: 'block' }} />
+      <canvas 
+        ref={canvasRef} 
+        className="block" 
+        style={{ width, height, imageRendering: 'pixelated' }} 
+      />
     </button>
   );
 }

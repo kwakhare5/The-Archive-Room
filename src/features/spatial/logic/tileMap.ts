@@ -80,7 +80,11 @@ export function findPath(
     { dc: -1, dr: 0, id: 3 }, // LEFT
   ];
 
-  while (openSet.length > 0) {
+  let iterations = 0;
+  const MAX_ITERATIONS = 500;
+
+  while (openSet.length > 0 && iterations < MAX_ITERATIONS) {
+    iterations++;
     openSet.sort((a, b) => a.priority - b.priority);
     const curr = openSet.shift()!;
     const currKey = key(curr.col, curr.row, curr.prevDir);
@@ -92,7 +96,7 @@ export function findPath(
         path.unshift({ col: k.col, row: k.row });
         const p = parent.get(key(k.col, k.row, k.prevDir));
         if (!p) break;
-        k = p as any;
+        k = { ...p, priority: 0 }; // p has col, row, prevDir. k needs those + priority.
       }
       return path;
     }

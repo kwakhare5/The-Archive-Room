@@ -39,7 +39,7 @@ interface MockPayload {
     watchAllSessions: boolean;
     hooksEnabled: boolean;
   };
-  agentSeats: Record<number, any>;
+  agentSeats: Record<number, { palette: number; seatId: string | null }>;
 }
 
 // ── Module-level state ─────────────────────────────────────────────────────────
@@ -270,9 +270,9 @@ export async function initBrowserMock(): Promise<void> {
     const savedRev = layout?.layoutRevision || 0;
     console.log(`[BrowserMock] File revision: ${fileRev}, Saved revision: ${savedRev}`);
 
-    // Force update if no saved layout exists OR if file version is newer
-    if (!layout || fileRev > savedRev) {
-      console.log(`[BrowserMock] ${!layout ? 'Initializing' : 'Updating'} to default layout (v${fileRev})`);
+    // Force update ONLY if no saved layout exists at all
+    if (!layout) {
+      console.log(`[BrowserMock] Initializing to default layout (v${fileRev})`);
       layout = fileLayout;
       const updatedConfig = config || {
         layout: null,
@@ -347,13 +347,18 @@ export function dispatchMockMessages(): void {
   
   // Merge persistence metadata into existingAgents message
   const agents = [1]; // Primary agent
-  const agentMeta: Record<number, any> = { 1: { palette: 0, hueShift: 0 } };
+  const agentMeta: Record<number, { palette: number; hueShift: number; seatId?: string }> = { 1: { palette: 0, hueShift: 0 } };
   const folderNames: Record<number, string> = { 1: 'archive-room' };
 
   for (const idStr of Object.keys(mockPayload.agentSeats)) {
     const id = parseInt(idStr);
     if (!agents.includes(id)) agents.push(id);
-    agentMeta[id] = mockPayload.agentSeats[id];
+    const seatData = mockPayload.agentSeats[id];
+    agentMeta[id] = {
+      palette: seatData.palette,
+      hueShift: 0,
+      seatId: seatData.seatId ?? undefined
+    };
   }
 
   dispatch({ 

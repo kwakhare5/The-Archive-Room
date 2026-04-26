@@ -14,17 +14,22 @@ function ColorSlider({
   onChange: (v: number) => void;
 }) {
   return (
-    <div className="flex items-center gap-4">
-      <span className="text-sm text-text-muted w-28 text-right shrink-0">{label}</span>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="flex-1 h-12 accent-accent"
-      />
-      <span className="text-sm text-text-muted w-48 text-right shrink-0">{value}</span>
+    <div className="flex items-center gap-3">
+      <span className="text-[10px] font-bold text-text-muted w-6 text-left shrink-0 font-mono">{label}</span>
+      <div className="relative flex-1 flex items-center group">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="w-full h-1 bg-bg-dark border border-border appearance-none cursor-pointer accent-accent
+            [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 
+            [&::-webkit-slider-thumb]:bg-accent [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-accent/50
+            [&::-webkit-slider-thumb]:hover:brightness-110 [&::-webkit-slider-thumb]:active:scale-95 transition-all"
+        />
+      </div>
+      <span className="text-[10px] font-mono text-text-muted w-8 text-right shrink-0 opacity-60">{value}</span>
     </div>
   );
 }

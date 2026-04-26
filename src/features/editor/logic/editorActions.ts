@@ -100,6 +100,8 @@ export function rotateFurniture(
   if (!item) return layout;
   const newType = getRotatedType(item.type, direction);
   if (!newType) return layout;
+  // SAFETY: Do not rotate if the new orientation would collide with walls or other furniture
+  if (!canPlaceFurniture(layout, newType, item.col, item.row, uid)) return layout;
   return {
     ...layout,
     furniture: layout.furniture.map((f) => (f.uid === uid ? { ...f, type: newType } : f)),

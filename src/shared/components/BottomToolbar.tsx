@@ -3,69 +3,84 @@ import { Button } from '@/shared/components/ui/Button';
 import { Dropdown } from '@/shared/components/ui/Dropdown';
 import { vscode } from '@/shared/lib/apiBridge';
 import type { WorkspaceFolder } from '@/shared/hooks/useExtensionMessages';
+import { Plus, Settings, Layout } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface BottomToolbarProps {
   isEditMode: boolean;
-  onOpenClaude: () => void;
   onToggleEditMode: () => void;
-  isSettingsOpen: boolean;
   onToggleSettings: () => void;
   workspaceFolders: WorkspaceFolder[];
-  isLocked: boolean;
 }
 
 export function BottomToolbar({
-  workspaceFolders,
+  isEditMode,
+  onToggleEditMode,
   onToggleSettings,
+  workspaceFolders,
 }: BottomToolbarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   return (
-    <div className="absolute bottom-12 right-12 z-50 pointer-events-none">
-      <div className="group pointer-events-auto flex flex-row-reverse items-center">
-        {/* The Trigger Square (Always Visible) - Solid Dark Obsidian */}
-        <div 
-          className="w-12 h-12 bg-[#1a140f] border border-white/20 flex items-center justify-center rounded-sm shadow-[8px_8px_0px_rgba(0,0,0,0.2)] cursor-pointer group-hover:bg-[#1a140f]/90 transition-all z-10"
+    <div className="absolute bottom-12 left-12 z-50 flex items-center gap-6 font-mono p-2 pixel-floating rounded-none">
+      {/* Settings Button */}
+      <Button
+        variant="secondary"
+        size="icon"
+        onClick={onToggleSettings}
+        className="h-16 w-16 pixel-magnetic shadow-pixel rounded-none"
+        title="Settings"
+      >
+        <Settings className="w-8 h-8" />
+      </Button>
+
+      {/* Edit Mode Toggle (Layout) */}
+      <Button
+        variant={isEditMode ? "outline" : "secondary"}
+        size="lg"
+        onClick={onToggleEditMode}
+        className={cn(
+          "h-16 px-10 flex items-center gap-4 pixel-magnetic shadow-pixel rounded-none",
+          isEditMode && "bg-accent/20 border-accent/40 text-text"
+        )}
+      >
+        <Layout className="w-8 h-8" />
+        <span className="pixel-text-label text-[16px] whitespace-nowrap">{isEditMode ? 'EXIT_EDIT' : 'LAYOUT'}</span>
+      </Button>
+
+      <div className="relative">
+        <Button
+          variant={isDropdownOpen ? "outline" : "secondary"}
+          size="lg"
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className={cn(
+            "h-16 px-10 flex items-center gap-4 pixel-magnetic shadow-pixel rounded-none",
+            isDropdownOpen && "border-accent bg-bg text-text shadow-[0_0_20px_rgba(217,119,6,0.1)]"
+          )}
         >
-          <span className="text-white/60 font-black text-lg leading-none">+</span>
-        </div>
+          <Plus className="w-8 h-8" />
+          <span className="pixel-text-label text-[16px] whitespace-nowrap">AGENT</span>
+        </Button>
 
-        {/* The Sliding Menu (Revealed on Hover) */}
-        <div className="flex items-center gap-2 overflow-hidden max-w-0 group-hover:max-w-md group-hover:pr-3 transition-all duration-500 ease-in-out opacity-0 group-hover:opacity-100">
-          <Button
-            variant="default"
-            onClick={onToggleSettings}
-            className="h-10 px-6 bg-[#1a140f] text-white/60 border border-white/10 hover:border-white/40 hover:text-white text-[10px] command-text rounded-sm whitespace-nowrap"
-          >
-            SETTINGS
-          </Button>
-
-          <div className="relative">
-            <Button
-              variant="default"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="h-10 px-8 bg-[#1a140f] text-white/80 border border-white/10 hover:border-white/40 hover:text-white text-[10px] font-black command-text rounded-sm whitespace-nowrap shadow-xl"
+        <Dropdown 
+          isOpen={isDropdownOpen} 
+          className="w-80 p-4 bg-bg border-2 border-border flex flex-col gap-2 shadow-2xl rounded-none absolute bottom-full mb-6 left-0 animate-in slide-in-from-bottom-2 duration-300"
+        >
+          <div className="px-4 py-3 pixel-text-telemetry border-b border-border mb-2 text-center whitespace-nowrap">Node_Registry</div>
+          {workspaceFolders.map((folder) => (
+            <button
+              key={folder.path}
+              className="w-full text-left p-4 text-[12px] text-text hover:bg-bg-dark rounded-none transition-all uppercase tracking-widest flex items-center justify-between group/item"
+              onClick={() => {
+                vscode.postMessage({ type: 'spawnAgent', folderPath: folder.path, folderName: folder.name });
+                setIsDropdownOpen(false);
+              }}
             >
-              DISPATCH_AGENT
-            </Button>
-
-            <Dropdown isOpen={isDropdownOpen} className="w-56 p-2 bg-[#1a140f] border-2 border-white/10 flex flex-col gap-1 shadow-2xl rounded-sm absolute bottom-full mb-4 right-0">
-              <div className="px-3 py-2 text-[9px] text-white/20 uppercase tracking-widest border-b border-white/5 mb-1 font-mono text-center">Archive_Project_Node</div>
-              {workspaceFolders.map((folder) => (
-                <button
-                  key={folder.path}
-                  className="w-full text-left p-3 text-[10px] text-white/40 hover:text-white hover:bg-white/5 transition-all uppercase tracking-widest font-mono"
-                  onClick={() => {
-                    vscode.postMessage({ type: 'spawnAgent', folderPath: folder.path, folderName: folder.name });
-                    setIsDropdownOpen(false);
-                  }}
-                >
-                  {folder.name}
-                </button>
-              ))}
-            </Dropdown>
-          </div>
-        </div>
+              <span className="whitespace-nowrap">{folder.name}</span>
+              <Plus className="w-4 h-4 opacity-0 group-hover/item:opacity-40" />
+            </button>
+          ))}
+        </Dropdown>
       </div>
     </div>
   );

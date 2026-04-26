@@ -5,7 +5,7 @@ import {
 } from '@/shared/constants/config';
 import { findPath } from '@/features/spatial/logic/tileMap';
 import type { CharacterSprites } from '@/shared/lib/engine/sprites/characterSpriteManifest';
-import type { Character, Seat, SpriteData, TileType as TileTypeVal } from '@/shared/types/types';
+import type { Character, Seat, SpriteData, TileType as TileTypeVal, ArchiveLayout } from '@/shared/types/types';
 import { CharacterState, Direction, TILE_SIZE } from '@/shared/types/types';
 import { palaceBridge } from '@/shared/lib/bridge';
 
@@ -82,6 +82,9 @@ export function createCharacter(
     matrixEffectSeeds: [],
     inputTokens: 0,
     outputTokens: 0,
+    targetUid: null,
+    pendingCommand: null,
+    pendingState: null,
   };
 }
 
@@ -92,6 +95,7 @@ export function updateCharacter(
   seats: Map<string, Seat>,
   tileMap: TileTypeVal[][],
   blockedTiles: Set<string>,
+  layout?: ArchiveLayout,
 ): void {
   ch.frameTimer += dt;
 
@@ -291,6 +295,11 @@ export function updateCharacter(
             // Notify bridge that we've arrived for the command
             palaceBridge.notifyArrival(ch.id, ch.targetFurnitureUid || 'unknown', ch.activeCommand);
             
+            // Clear observer fields after arrival
+            ch.targetUid = null;
+            ch.pendingCommand = null;
+            ch.pendingState = null;
+            
             return;
           }
         }
@@ -371,6 +380,34 @@ export function updateCharacter(
             if (newPath.length > 0) {
               ch.path = newPath;
               ch.moveProgress = 0;
+            }
+          }
+        }
+      }
+
+      // If we are walking to a furniture UID, check if it moved
+      if (ch.targetUid && layout) {
+        const item = layout.furniture.find((f) => f.uid === ch.targetUid);
+        if (item) {
+          // If the last step in our path no longer overlaps with the furniture's new location, repath
+          const lastStep = ch.path[ch.path.length - 1] || { col: ch.tileCol, row: ch.tileRow };
+          // Simplified: just check if the intended target tile is still "furniture" or if we need a new one
+          // Real check: find the furniture catalog entry to see its footprint
+          const catalog = (window as any).furnitureCatalog; // Hack for circular dep or pass catalog in
+          if (catalog) {
+            const entry = catalog[item.type];
+            if (entry) {
+              const isStillOnTarget = 
+                lastStep.col >= item.col && lastStep.col < item.col + entry.footprintW &&
+                lastStep.row >= item.row && lastStep.row < item.row + entry.footprintH;
+              
+              if (!isStillOnTarget) {
+                // Target moved! Find nearest tile of the NEW location
+                // For now, just clear path to force engine to pick a new one or repath
+                // This is handled in ArchiveEngine.ts usually, but we can trigger it here
+                ch.path = []; 
+                ch.moveProgress = 0;
+              }
             }
           }
         }

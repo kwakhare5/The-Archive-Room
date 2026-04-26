@@ -7,8 +7,6 @@ import {
   DISCARD_INTERACTION_DURATION_SEC,
   DISMISS_BUBBLE_FAST_FADE_SEC,
   FURNITURE_ANIM_INTERVAL_SEC,
-  HUE_SHIFT_MIN_DEG,
-  HUE_SHIFT_RANGE_DEG,
   READ_INTERACTION_DURATION_SEC,
   THINK_INTERACTION_DURATION_SEC,
   WAITING_BUBBLE_DURATION_SEC,
@@ -602,6 +600,10 @@ export class ArchiveEngine {
         ch.activeCommand = command;
         ch.targetFurnitureUid = target ?? null;
         ch.interactionTimer = mapping.duration;
+        // Observer: Track the target and intended outcome to allow path recalculation if target moves
+        ch.targetUid = target ?? null;
+        ch.pendingCommand = command;
+        ch.pendingState = mapping.state as CharacterState;
         // Store facing direction as a hint for when agent arrives
         (ch as Character & { _arrivalFacing?: number })._arrivalFacing = targetTile.facingDir;
         return { success: true };
@@ -952,7 +954,7 @@ export class ArchiveEngine {
 
       // Temporarily unblock own seat so character can pathfind to it
       this.withOwnSeatUnblocked(ch, () =>
-        updateCharacter(ch, dt, this.walkableTiles, this.seats, this.tileMap, this.blockedTiles),
+        updateCharacter(ch, dt, this.walkableTiles, this.seats, this.tileMap, this.blockedTiles, this.layout),
       );
 
       // Tick bubble timer for waiting bubbles

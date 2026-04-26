@@ -10,15 +10,15 @@ foreach ($port in $ports) {
     $processIds = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
     
     if ($processIds) {
-        foreach ($pid in $processIds) {
+        foreach ($procId in $processIds) {
             try {
-                $process = Get-Process -Id $pid -ErrorAction SilentlyContinue
+                $process = Get-Process -Id $procId -ErrorAction SilentlyContinue
                 if ($process) {
-                    Write-Host "[KILL] Found $($process.Name) (PID: $pid) on port $port. Terminating..." -ForegroundColor Yellow
-                    Stop-Process -Id $pid -Force
+                    Write-Host "[KILL] Found $($process.Name) (PID: $procId) on port $port. Terminating..." -ForegroundColor Yellow
+                    Stop-Process -Id $procId -Force
                 }
             } catch {
-                Write-Host "[WARN] Could not kill process $pid on port $port. It may require elevated permissions." -ForegroundColor Red
+                Write-Host "[WARN] Could not kill process $procId on port $port. It may require elevated permissions." -ForegroundColor Red
             }
         }
     } else {

@@ -11,38 +11,36 @@
   font-display: swap;
   src: url('/fonts/FSPixelSansUnicode-Regular.ttf') format('truetype');
 }
-
 :root {
-  /* Core palette - Elite Archive Executive */
-  --color-bg: #fdfaf6; /* Premium Parchment */
-  --color-bg-dark: #f5f1ea; /* Antique Library Depth */
-  --color-bg-thumb: #e5dcd0;
-  --color-border: #d7ccc0; /* Precise Architectural Sand */
-  --color-accent: #3d2b1f; /* Deep Espresso */
-  --color-accent-bright: #5c4333;
+  /* Core palette - Muted Library Restoration */
+  --color-bg: #f5f0e8; /* Cream Background */
+  --color-bg-dark: #e5dcd0; /* Beige Depth */
+  --color-bg-thumb: #d6ccc2; /* Muted Scrollbar */
+  --color-border: rgba(74, 55, 40, 0.15); /* Soft Brown Border */
+  --color-accent: #d97706; /* Original Theme Amber */
+  --color-accent-bright: #fbbf24;
+  --color-original-bg: #f5f0e8;
+  --color-original-border: #d6ccc2;
 
-  /* Text - High-Craft Typography */
-  --color-text: #2c1e14;
-  --color-text-muted: #8b7d6b;
+  /* Text - High-Visibility Muted Tones */
+  --color-text: #4a3728; /* Dark Brown Text */
+  --color-text-muted: #8b7d6b; /* Muted Brown Text */
 
-  /* UI Elements - "The Blade" System */
-  --color-btn-bg: #fcfaf7;
-  --color-btn-hover: #f5f1ea;
-  --color-active-bg: #e5dcd0;
+  /* UI Elements */
+  --color-btn-bg: rgba(74, 55, 40, 0.05);
+  --color-btn-hover: rgba(217, 119, 6, 0.1);
+  --color-active-bg: rgba(217, 119, 6, 0.15);
 
-  /* Semantic - Professional Tones */
-  --color-reset-text: #991b1b;
-  --color-danger: #b91c1c;
+  /* Semantic */
+  --color-danger: #991b1b;
   --color-warning: #d97706;
 
-  /* Status - Muted Maturity */
-  --color-status-permission: #92400e;
-  --color-status-active: #1e3a8a;
-  --color-status-success: #166534;
-  --color-status-error: var(--color-danger);
+  /* Status */
+  --color-status-success: #15803d;
+  --color-status-error: #991b1b;
 
-  /* Shadow - Expensive Depth */
-  --shadow-pixel: 4px 4px 0px rgba(61, 43, 31, 0.08);
+  /* Shadow - Softened Pixel */
+  --shadow-pixel: 3px 3px 0px rgba(74, 55, 40, 0.1);
 
   /* Spacing */
   --blade-padding: 12px 24px;
@@ -83,6 +81,8 @@
 @theme inline {
   --spacing: 1px;
   --font-pixel: 'FS Pixel Sans', sans-serif;
+  --font-sans: var(--font-outfit), sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
 
   /* Elite Text Scaling - Minimalist */
   --text-*: initial;
@@ -100,6 +100,7 @@
   --color-accent: var(--color-accent);
   --color-text: var(--color-text);
   --color-text-muted: var(--color-text-muted);
+  --color-original-bg: var(--color-original-bg);
   --color-btn-bg: var(--color-btn-bg);
   --shadow-pixel: var(--shadow-pixel);
   --font-heading: var(--font-sans);
@@ -144,36 +145,46 @@
 
 @layer base {
   html, body, #root {
-    @apply m-0 w-full h-full overflow-hidden font-pixel text-base text-text bg-bg;
+    @apply m-0 w-full h-full overflow-hidden font-mono text-base text-text bg-bg;
   }
-  * { @apply font-pixel tracking-wider border-border outline-ring/50; }
+  * { @apply font-mono tracking-normal border-border outline-ring/50; }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-bg text-text;
   }
   html {
-    @apply font-sans;
+    @apply font-mono;
   }
 }
 
 @layer components {
-  /* "The Command Tile" - Silent Obsidian (V5) */
+  /* Intelligence Spine - The Design Anchor */
+  .intel-spine {
+    @apply absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-transparent via-accent to-transparent opacity-50;
+    filter: blur(1px);
+  }
+
+  /* Crystal Glass Panel */
   .pixel-blade {
-    @apply flex items-center bg-[#1a140f]/80 backdrop-blur-xl border border-white/5 shadow-2xl;
+    @apply flex items-center bg-white/[0.02] backdrop-blur-2xl border border-white/5 shadow-2xl;
     height: 48px;
-    border-radius: 4px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 0;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   .pixel-blade:hover {
-    @apply bg-[#1a140f]/90 border-white/10;
+    @apply bg-white/[0.05] border-white/10 -translate-y-0.5;
   }
 
-  /* Deep Archive Panel */
+  /* Deep Archive Panel - Original Flat Style */
+  .pixel-panel-original {
+    @apply bg-bg border border-border shadow-pixel;
+    border-radius: 0;
+  }
+
+  /* Deep Archive Panel - Floating Glass */
   .pixel-panel-double {
-    @apply bg-[#1a140f]/98 border-2 border-white/10 shadow-2xl;
-    box-shadow: 20px 20px 0px rgba(0, 0, 0, 0.6);
-    outline: 2px solid rgba(255, 255, 255, 0.03);
-    outline-offset: 8px;
+    @apply bg-bg-dark border-2 border-border shadow-pixel;
+    border-radius: 0;
   }
 
   /* Executive Hover (Design Spell) */
@@ -181,9 +192,9 @@
     @apply transition-all duration-200 ease-out active:scale-95;
   }
   .magnetic-hover:hover {
-    transform: translate(-3px, -3px);
-    box-shadow: 10px 10px 0px rgba(255, 255, 255, 0.2);
-    @apply border-white/50;
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0px rgba(255, 255, 255, 0.1);
+    @apply border-white/30;
   }
 
   /* Monospace Command Text - Sharpened */
@@ -195,6 +206,43 @@
   /* Horizontal carousel for editor items */
   .carousel {
     @apply flex gap-6 overflow-x-auto flex-nowrap pb-2;
+  }
+
+  /* Pixel Design System - Proper Utilities */
+  .pixel-button-primary {
+    @apply bg-accent text-bg border-accent shadow-[0_4px_0_rgba(180,100,0,0.3)] transition-all rounded-none;
+    @apply active:translate-y-[2px] active:shadow-none hover:translate-y-[-2px] hover:brightness-110;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+  }
+
+  .pixel-button-secondary {
+    @apply bg-bg-dark/40 border border-border text-text transition-all rounded-none;
+    @apply hover:bg-bg-dark/60 hover:border-border/60;
+  }
+
+  .pixel-text-label {
+    @apply font-sans text-[14px] font-black uppercase tracking-[0.2em] text-text;
+  }
+
+  .pixel-text-telemetry {
+    @apply font-mono text-[10px] font-bold tracking-[0.3em] text-text-muted uppercase;
+  }
+
+  /* Gamified Status Bar - Retired */
+
+  /* Magnetic Hover - Gamified Depth */
+  .pixel-magnetic {
+    @apply transition-all duration-200 active:scale-95;
+  }
+  .pixel-magnetic:hover {
+    @apply translate-y-[-2px] brightness-110 shadow-lg;
+  }
+
+  /* Floating Island - Spatial Separator */
+  .pixel-floating {
+    @apply backdrop-blur-xl bg-bg/80 shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-2 border-border/40;
   }
 
   /* Pulsing dot animation (DebugView, ToolOverlay) */
