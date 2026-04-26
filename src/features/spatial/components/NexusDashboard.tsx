@@ -13,14 +13,9 @@ import { vscode } from '@/shared/lib/apiBridge';
 import { cn } from '@/lib/utils';
 
 // UI Components
-import { BottomToolbar } from '@/shared/components/BottomToolbar';
-import { SettingsModal } from '@/shared/components/SettingsModal';
-import { ZoomControls } from '@/features/spatial/components/ZoomControls';
-import { EditorToolbar } from '@/features/editor/components/EditorToolbar';
-import { ArchiveChatPanel } from '@/features/agents/components/ArchiveChatPanel';
 import { Button } from '@/shared/components/ui/Button';
 import { knowledgeStore, type KnowledgeMap } from '@/shared/lib/engine/knowledgeStore';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+
 
 /**
  * 🚨 UI IMMUTABILITY LOCK: NexusDashboard
@@ -51,20 +46,9 @@ export default function NexusDashboard() {
   );
 
   const {
-    agents,
-    agentTools,
-    subagentCharacters,
     layoutReady,
     layoutWasReset,
-    loadedAssets,
     workspaceFolders,
-    externalAssetDirectories,
-    // extensionVersion,
-    watchAllSessions,
-    setWatchAllSessions,
-    alwaysShowLabels,
-    hooksEnabled,
-    setHooksEnabled,
     assetsLoaded,
   } = useExtensionMessages(() => archiveEngine, editor.setLastSavedLayout, isEditDirty);
 
@@ -94,7 +78,7 @@ export default function NexusDashboard() {
   // --- AUTO-STAFFING (Zero-Friction Resident Model) ---
   const hasAutoDispatched = useRef(false);
   useEffect(() => {
-    if (layoutReady && workspaceFolders.length > 0 && agents.length === 0 && !hasAutoDispatched.current) {
+    if (layoutReady && workspaceFolders.length > 0 && archiveEngine.getCharacters().length === 0 && !hasAutoDispatched.current) {
       console.log('[Resident Staff] Auto-dispatching primary Librarian...');
       const primaryFolder = workspaceFolders[0];
       vscode.postMessage({ 
@@ -104,19 +88,10 @@ export default function NexusDashboard() {
       });
       hasAutoDispatched.current = true;
     }
-  }, [layoutReady, workspaceFolders, agents.length]);
-
-  // Use alwaysShowLabels directly from hook to avoid cascading renders
-  const showOverlay = alwaysShowLabels;
-
-  const handleToggleAlwaysShowOverlay = useCallback(() => {
-    vscode.postMessage({ type: 'setAlwaysShowLabels', enabled: !alwaysShowLabels });
-  }, [alwaysShowLabels]);
+  }, [layoutReady, workspaceFolders, archiveEngine]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [isQuerying, setIsQuerying] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const handleAgentQuery = useCallback(async (query: string) => {
     setIsQuerying(true);
@@ -194,9 +169,9 @@ export default function NexusDashboard() {
   }
 
   return (
-    <div ref={containerRef} className="flex h-screen w-full overflow-hidden bg-bg font-mono selection:bg-accent/30">
-      {/* Primary Interaction Zone (The Map) */}
-      <div className="flex-1 relative h-full overflow-hidden flex flex-col">
+    <div ref={containerRef} className="h-screen w-full overflow-hidden bg-bg font-mono selection:bg-accent/30">
+      {/* Primary Interaction Zone (The Map) - Now Full Screen */}
+      <div className="relative h-full w-full overflow-hidden flex flex-col">
         <div className="flex-1 relative overflow-hidden">
           <NexusCanvas
             archiveEngine={archiveEngine}
@@ -209,122 +184,80 @@ export default function NexusDashboard() {
             onDeleteSelected={editor.handleDeleteSelected}
             onRotateSelected={editor.handleRotateSelected}
             onDragMove={editor.handleDragMove}
-            editorTick={editor.editorTick}
+            panRef={editor.panRef}
             zoom={editor.zoom}
             onZoomChange={editor.handleZoomChange}
-            panRef={editor.panRef}
+            editorTick={editor.editorTick}
             assetsLoaded={assetsLoaded}
             onFurnitureSelect={handleFurnitureSelect}
           />
 
-          {/* Sidebar Toggle Button (Luxury Glass Design) */}
-          <Button
-            variant="ghost"
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className={cn(
-              "absolute top-1/2 -translate-y-1/2 right-0 z-50 h-20 w-1 bg-bg border-l border-y border-border hover:w-2 hover:bg-accent/40 transition-all duration-300 group shadow-2xl rounded-none p-0",
-              !isSidebarOpen && "right-[-1px]"
-            )}
-          >
-            <div className={`absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-bg border border-border rounded-none transition-all duration-300 opacity-0 group-hover:opacity-100 flex items-center gap-2 font-mono
-              ${isSidebarOpen ? 'rotate-0' : 'rotate-180'}`}>
-              <ChevronRight className="w-3 h-3 text-text-muted" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-text-muted whitespace-nowrap">
-                {isSidebarOpen ? 'CLOSE_NEXUS' : 'OPEN_NEXUS'}
-              </span>
-            </div>
-          </Button>
+          {/* Agent Labels & Thought Bubbles Overlay */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {archiveEngine.getCharacters().map((ch) => {
+              // Convert world position to screen position
+              const screenX = (ch.x * 32 * editor.zoom) + editor.panRef.current.x;
+              const screenY = (ch.y * 32 * editor.zoom) + editor.panRef.current.y;
+              
+              // Only render if within or near viewport bounds
+              if (screenX < -200 || screenX > window.innerWidth + 200 || 
+                  screenY < -200 || screenY > window.innerHeight + 200) return null;
 
-          {/* Vignette overlay (Local to Map) */}
-          <div className="absolute inset-0 pointer-events-none" style={{ background: 'var(--vignette)' }} />
-
-          {editor.isEditMode &&
-            (() => {
-              const selUid = editorState.selectedFurnitureUid;
-              const selColor = selUid
-                ? (archiveEngine.getLayout().furniture.find((f) => f.uid === selUid)?.color ?? null)
-                : null;
+              const isPermission = ch.bubbleType === 'permission';
+              const hasText = ch.bubbleText && ch.bubbleText.trim().length > 0;
+              
               return (
-                <EditorToolbar
-                  activeTool={editorState.activeTool}
-                  selectedTileType={editorState.selectedTileType}
-                  selectedFurnitureType={editorState.selectedFurnitureType}
-                  selectedFurnitureUid={selUid}
-                  selectedFurnitureColor={selColor}
-                  floorColor={editorState.floorColor}
-                  wallColor={editorState.wallColor}
-                  selectedWallSet={editorState.selectedWallSet}
-                  onToolChange={editor.handleToolChange}
-                  onTileTypeChange={editor.handleTileTypeChange}
-                  onFloorColorChange={editor.handleFloorColorChange}
-                  onWallColorChange={editor.handleWallColorChange}
-                  onWallSetChange={editor.handleWallSetChange}
-                  onSelectedFurnitureColorChange={editor.handleSelectedFurnitureColorChange}
-                  onFurnitureTypeChange={editor.handleFurnitureTypeChange}
-                  onUndo={editor.handleUndo}
-                  onRedo={editor.handleRedo}
-                  onFactoryReset={editor.handleFactoryReset}
-                  onSave={editor.handleSave}
-                  onToggleLock={editor.handleToggleLock}
-                  isLocked={!!archiveEngine.getLayout().isLocked}
-                  loadedAssets={loadedAssets}
-                />
+                <div 
+                  key={ch.id}
+                  className="absolute left-0 top-0 transition-opacity duration-300"
+                  style={{ 
+                    transform: `translate(${screenX}px, ${screenY}px)`,
+                    zIndex: Math.floor(ch.y)
+                  }}
+                >
+                  <div className="relative -translate-x-1/2 -translate-y-[120%] flex flex-col items-center gap-2">
+                    {/* Thought Bubble / Speech Bubble */}
+                    {(hasText || isPermission) && (
+                      <div className={`
+                        px-4 py-3 rounded-2xl max-w-[280px] min-w-[120px] shadow-2xl border-2 animate-in fade-in zoom-in duration-300
+                        ${isPermission 
+                          ? 'bg-accent/90 border-accent text-white font-bold' 
+                          : 'bg-white/95 border-bg/10 text-bg backdrop-blur-md'}
+                        pointer-events-auto cursor-default
+                      `}>
+                        <p className="text-[14px] leading-relaxed break-words">
+                          {isPermission ? "⚠️ NEEDS APPROVAL" : ch.bubbleText}
+                        </p>
+                        {isPermission && (
+                          <div className="mt-2 flex gap-2 justify-end">
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                archiveEngine.dismissBubble(ch.id);
+                              }}
+                              className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-[12px] transition-colors"
+                            >
+                              DISMISS
+                            </button>
+                          </div>
+                        )}
+                        {/* Tail */}
+                        <div className={`
+                          absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 rotate-45 border-r-2 border-b-2
+                          ${isPermission ? 'bg-accent border-accent' : 'bg-white border-bg/10'}
+                        `} />
+                      </div>
+                    )}
+                  </div>
+                </div>
               );
-            })()}
+            })}
+          </div>
 
-          <ZoomControls zoom={editor.zoom} onZoomChange={editor.handleZoomChange} />
-
-          <BottomToolbar
-            isEditMode={editor.isEditMode}
-            onToggleEditMode={editor.handleToggleEditMode}
-            onToggleSettings={() => setIsSettingsOpen((v) => !v)}
-            workspaceFolders={workspaceFolders}
-          />
+          {/* Vignette overlay (Immersive Office Aesthetic) */}
+          <div className="absolute inset-0 pointer-events-none" style={{ background: 'var(--vignette)' }} />
         </div>
       </div>
-
-      {/* Intelligence Nexus (The Command Panel) */}
-      <div 
-        className={`h-full transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] overflow-hidden border-l border-border
-          ${isSidebarOpen ? 'w-[500px] opacity-100' : 'w-0 opacity-0'}`}
-      >
-        <div className="w-[500px] h-full">
-          <ArchiveChatPanel 
-            furnitureId={selectedFurniture?.id ?? null}
-            furnitureName={selectedFurniture?.name ?? null}
-            notes={selectedFurniture ? (knowledgeMap[selectedFurniture.id] || []) : []}
-            onCloseContext={() => setSelectedFurniture(null)}
-            onPlantNote={handlePlantNote}
-            onQuery={handleAgentQuery}
-            isLoading={isQuerying}
-          />
-        </div>
-      </div>
-
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        isDebugMode={false}
-        onToggleDebugMode={() => {}}
-        alwaysShowOverlay={showOverlay}
-        onToggleAlwaysShowOverlay={handleToggleAlwaysShowOverlay}
-        externalAssetDirectories={externalAssetDirectories}
-        watchAllSessions={watchAllSessions}
-        onToggleWatchAllSessions={() => {
-          const newVal = !watchAllSessions;
-          setWatchAllSessions(newVal);
-          vscode.postMessage({ type: 'setWatchAllSessions', enabled: newVal });
-        }}
-        hooksEnabled={hooksEnabled}
-        onToggleHooksEnabled={() => {
-          const newVal = !hooksEnabled;
-          setHooksEnabled(newVal);
-          vscode.postMessage({ type: 'setHooksEnabled', enabled: newVal });
-        }}
-      />
-
     </div>
   );
 }
-
-

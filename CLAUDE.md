@@ -169,8 +169,7 @@ Protocol:    JSON over WebSocket (PalaceEventBridge) with Multi-Step Queuing
 ## Operational Protocol (HARDENED)
 - **Sentinel Header**: EVERY response MUST begin with the Expert Scan header.
 - **Diagnostic Verification**: Use a "Red Screen Test" (Diagnostic Color Change) to prove that code changes are reaching the browser.
-- **Mandatory Planning**: NO code changes are allowed without an approved implementation plan.
-- **The Pulse Protocol**: Every significant task or turn end MUST be saved locally via `git commit` (and pushed via `npm run save` only when requested).
+- **Mandatory Planning**: NO code changes are allowed without an approved implementation plan- **The Pulse Protocol**: Every significant task or turn end MUST be saved locally via `git commit` (and pushed via `npm run save` only when requested).
 
 ---
 

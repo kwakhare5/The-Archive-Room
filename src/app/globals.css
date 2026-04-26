@@ -157,55 +157,10 @@
 }
 
 @layer components {
-  /* Intelligence Spine - The Design Anchor */
-  .intel-spine {
-    @apply absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-transparent via-accent to-transparent opacity-50;
-    filter: blur(1px);
-  }
-
-  /* Crystal Glass Panel */
-  .pixel-blade {
-    @apply flex items-center bg-white/[0.02] backdrop-blur-2xl border border-white/5 shadow-2xl;
-    height: 48px;
-    border-radius: 0;
-    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-  }
-
-  .pixel-blade:hover {
-    @apply bg-white/[0.05] border-white/10 -translate-y-0.5;
-  }
-
   /* Deep Archive Panel - Original Flat Style */
   .pixel-panel-original {
     @apply bg-bg border border-border shadow-pixel;
     border-radius: 0;
-  }
-
-  /* Deep Archive Panel - Floating Glass */
-  .pixel-panel-double {
-    @apply bg-bg-dark border-2 border-border shadow-pixel;
-    border-radius: 0;
-  }
-
-  /* Executive Hover (Design Spell) */
-  .magnetic-hover {
-    @apply transition-all duration-200 ease-out active:scale-95;
-  }
-  .magnetic-hover:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 4px 4px 0px rgba(255, 255, 255, 0.1);
-    @apply border-white/30;
-  }
-
-  /* Monospace Command Text - Sharpened */
-  .command-text {
-    @apply font-mono uppercase tracking-[0.4em] text-white;
-    text-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
-  }
-
-  /* Horizontal carousel for editor items */
-  .carousel {
-    @apply flex gap-6 overflow-x-auto flex-nowrap pb-2;
   }
 
   /* Pixel Design System - Proper Utilities */
@@ -293,4 +248,14 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }

@@ -682,8 +682,6 @@ export function NexusCanvas({
 
       const hitId = archiveEngine.getCharacterAt(pos.worldX, pos.worldY);
       if (hitId !== null) {
-        // Dismiss any active bubble on click
-        archiveEngine.dismissBubble(hitId);
         // Toggle selection: click same agent deselects, different agent selects
         if (archiveEngine.selectedAgentId === hitId) {
           archiveEngine.setSelectedAgentId(null);

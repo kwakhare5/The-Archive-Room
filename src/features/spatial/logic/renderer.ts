@@ -236,133 +236,10 @@ export function renderScene(
 
 // ── Seat indicators ─────────────────────────────────────────────
 
-function renderSeatIndicators(
-  ctx: CanvasRenderingContext2D,
-  seats: Map<string, Seat>,
-  characters: Map<number, Character>,
-  selectedAgentId: number | null,
-  hoveredTile: { col: number; row: number } | null,
-  offsetX: number,
-  offsetY: number,
-  zoom: number,
-): void {
-  if (selectedAgentId === null || !hoveredTile) return;
-  const selectedChar = characters.get(selectedAgentId);
-  if (!selectedChar) return;
-
-  // Only show indicator for the hovered seat tile
-  for (const [uid, seat] of seats) {
-    if (seat.seatCol !== hoveredTile.col || seat.seatRow !== hoveredTile.row) continue;
-
-    const s = TILE_SIZE * zoom;
-    const x = offsetX + seat.seatCol * s;
-    const y = offsetY + seat.seatRow * s;
-
-    if (selectedChar.seatId === uid) {
-      // Selected agent's own seat — blue
-      ctx.fillStyle = SEAT_OWN_COLOR;
-    } else if (!seat.assigned) {
-      // Available seat — green
-      ctx.fillStyle = SEAT_AVAILABLE_COLOR;
-    } else {
-      // Busy (assigned to another agent) — red
-      ctx.fillStyle = SEAT_BUSY_COLOR;
-    }
-    ctx.fillRect(x, y, s, s);
-    break;
-  }
-}
 
 // ── Edit mode overlays ──────────────────────────────────────────
 
-/** @internal */
-export function renderGridOverlay(
-  ctx: CanvasRenderingContext2D,
-  offsetX: number,
-  offsetY: number,
-  zoom: number,
-  cols: number,
-  rows: number,
-  tileMap?: TileTypeVal[][],
-): void {
-  const s = TILE_SIZE * zoom;
-  ctx.strokeStyle = GRID_LINE_COLOR;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  // Vertical lines — offset by 0.5 for crisp 1px lines
-  for (let c = 0; c <= cols; c++) {
-    const x = offsetX + c * s + 0.5;
-    ctx.moveTo(x, offsetY);
-    ctx.lineTo(x, offsetY + rows * s);
-  }
-  // Horizontal lines
-  for (let r = 0; r <= rows; r++) {
-    const y = offsetY + r * s + 0.5;
-    ctx.moveTo(offsetX, y);
-    ctx.lineTo(offsetX + cols * s, y);
-  }
-  ctx.stroke();
 
-  // Draw faint dashed outlines on VOID tiles
-  if (tileMap) {
-    ctx.save();
-    ctx.strokeStyle = VOID_TILE_OUTLINE_COLOR;
-    ctx.lineWidth = 1;
-    ctx.setLineDash(VOID_TILE_DASH_PATTERN);
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        if (tileMap[r]?.[c] === TileType.VOID) {
-          ctx.strokeRect(offsetX + c * s + 0.5, offsetY + r * s + 0.5, s - 1, s - 1);
-        }
-      }
-    }
-    ctx.restore();
-  }
-}
-
-/** Draw faint expansion placeholders 1 tile outside grid bounds (ghost border). */
-function renderGhostBorder(
-  ctx: CanvasRenderingContext2D,
-  offsetX: number,
-  offsetY: number,
-  zoom: number,
-  cols: number,
-  rows: number,
-  ghostHoverCol: number,
-  ghostHoverRow: number,
-): void {
-  const s = TILE_SIZE * zoom;
-  ctx.save();
-
-  // Collect ghost border tiles: one ring around the grid
-  const ghostTiles: Array<{ c: number; r: number }> = [];
-  // Top and bottom rows
-  for (let c = -1; c <= cols; c++) {
-    ghostTiles.push({ c, r: -1 });
-    ghostTiles.push({ c, r: rows });
-  }
-  // Left and right columns (excluding corners already added)
-  for (let r = 0; r < rows; r++) {
-    ghostTiles.push({ c: -1, r });
-    ghostTiles.push({ c: cols, r });
-  }
-
-  for (const { c, r } of ghostTiles) {
-    const x = offsetX + c * s;
-    const y = offsetY + r * s;
-    const isHovered = c === ghostHoverCol && r === ghostHoverRow;
-    if (isHovered) {
-      ctx.fillStyle = GHOST_BORDER_HOVER_FILL;
-      ctx.fillRect(x, y, s, s);
-    }
-    ctx.strokeStyle = isHovered ? GHOST_BORDER_HOVER_STROKE : GHOST_BORDER_STROKE;
-    ctx.lineWidth = 1;
-    ctx.setLineDash(VOID_TILE_DASH_PATTERN);
-    ctx.strokeRect(x + 0.5, y + 0.5, s - 1, s - 1);
-  }
-
-  ctx.restore();
-}
 
 /** @internal */
 export function renderGhostPreview(
@@ -506,59 +383,6 @@ function renderRotateButton(
   return { cx, cy, radius };
 }
 
-function renderTargetHighlights(
-  ctx: CanvasRenderingContext2D,
-  layoutFurniture: PlacedFurniture[],
-  characters: Character[],
-  offsetX: number,
-  offsetY: number,
-  zoom: number,
-): void {
-  const pulse = 0.5 + 0.3 * Math.sin(performance.now() / 200);
-  
-  for (const ch of characters) {
-    if (!ch.targetFurnitureUid || !ch.activeCommand) continue;
-    
-    const item = layoutFurniture.find(f => f.uid === ch.targetFurnitureUid);
-    if (!item) continue;
-    
-    // Expand highlight to cover entire stack for specific types
-    const baseType = item.type.split(':')[0];
-    let itemsInStack = [item];
-    if (baseType === 'BOOKSHELF' || baseType === 'WHITEBOARD') {
-      itemsInStack = layoutFurniture.filter(f => f.type.startsWith(baseType) && f.col === item.col);
-    }
-
-    // Calculate bounds of the entire stack
-    let minCol = item.col;
-    let minRow = item.row;
-    let maxCol = item.col;
-    let maxRow = item.row;
-
-    for (const f of itemsInStack) {
-      const entry = getCatalogEntry(f.type);
-      const fw = entry ? entry.footprintW : 1;
-      const fh = entry ? entry.footprintH : 1;
-      minCol = Math.min(minCol, f.col);
-      minRow = Math.min(minRow, f.row);
-      maxCol = Math.max(maxCol, f.col + fw);
-      maxRow = Math.max(maxRow, f.row + fh);
-    }
-
-    const s = TILE_SIZE * zoom;
-    const fx = offsetX + minCol * s;
-    const fy = offsetY + minRow * s;
-    const fw_px = (maxCol - minCol) * s;
-    const fh_px = (maxRow - minRow) * s;
-    
-    ctx.save();
-    ctx.strokeStyle = `rgba(255, 255, 255, ${pulse})`;
-    ctx.lineWidth = 2 * zoom;
-    ctx.setLineDash([4 * zoom, 2 * zoom]);
-    ctx.strokeRect(fx - 2, fy - 2, fw_px + 4, fh_px + 4);
-    ctx.restore();
-  }
-}
 
 // ── Speech bubbles ──────────────────────────────────────────────
 
@@ -688,19 +512,6 @@ export function renderFrame(
   // Draw tiles (floor + wall base color)
   renderTileGrid(ctx, tileMap, offsetX, offsetY, zoom, tileColors, layoutCols);
 
-  // Seat indicators (below furniture/characters, on top of floor)
-  if (selection) {
-    renderSeatIndicators(
-      ctx,
-      selection.seats,
-      selection.characters,
-      selection.selectedAgentId,
-      selection.hoveredTile,
-      offsetX,
-      offsetY,
-      zoom,
-    );
-  }
 
   // Build wall instances for z-sorting with furniture and characters
   // Match original project: walls are z-sorted sprites with baked 3D perspective
@@ -731,84 +542,11 @@ export function renderFrame(
 
   renderScene(ctx, allFurniture, characters, offsetX, offsetY, zoom, selectedId, hoveredId);
 
-  // Target furniture highlights
-  if (layoutFurniture) {
-    renderTargetHighlights(ctx, layoutFurniture, characters, offsetX, offsetY, zoom);
-  }
 
   // Speech bubbles (always on top of characters)
   renderBubbles(ctx, characters, offsetX, offsetY, zoom);
 
-  // Editor overlays
-  if (editor) {
-    if (editor.showGrid) {
-      renderGridOverlay(ctx, offsetX, offsetY, zoom, cols, rows, tileMap);
-    }
-    if (editor.showGhostBorder) {
-      renderGhostBorder(
-        ctx,
-        offsetX,
-        offsetY,
-        zoom,
-        cols,
-        rows,
-        editor.ghostBorderHoverCol,
-        editor.ghostBorderHoverRow,
-      );
-    }
-    if (editor.ghostSprite && editor.ghostCol >= 0) {
-      renderGhostPreview(
-        ctx,
-        editor.ghostSprite,
-        editor.ghostCol,
-        editor.ghostRow,
-        editor.ghostValid,
-        offsetX,
-        offsetY,
-        zoom,
-        editor.ghostMirrored,
-      );
-    }
-    if (editor.hasSelection) {
-      renderSelectionHighlight(
-        ctx,
-        editor.selectedCol,
-        editor.selectedRow,
-        editor.selectedW,
-        editor.selectedH,
-        offsetX,
-        offsetY,
-        zoom,
-      );
-      editor.deleteButtonBounds = renderDeleteButton(
-        ctx,
-        editor.selectedCol,
-        editor.selectedRow,
-        editor.selectedW,
-        editor.selectedH,
-        offsetX,
-        offsetY,
-        zoom,
-      );
-      if (editor.isRotatable) {
-        editor.rotateButtonBounds = renderRotateButton(
-          ctx,
-          editor.selectedCol,
-          editor.selectedRow,
-          editor.selectedW,
-          editor.selectedH,
-          offsetX,
-          offsetY,
-          zoom,
-        );
-      } else {
-        editor.rotateButtonBounds = null;
-      }
-    } else {
-      editor.deleteButtonBounds = null;
-      editor.rotateButtonBounds = null;
-    }
-  }
+  // Editor overlays (Permanently disabled as Office UI is complete)
 
   return { offsetX, offsetY };
 }
