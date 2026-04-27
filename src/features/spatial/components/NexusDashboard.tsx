@@ -169,7 +169,7 @@ export default function NexusDashboard() {
   }
 
   return (
-    <div ref={containerRef} className="h-screen w-full overflow-hidden bg-bg font-mono selection:bg-accent/30">
+    <div ref={containerRef} className="h-screen w-full overflow-hidden bg-[#3d0000] font-mono selection:bg-accent/30">
       {/* Primary Interaction Zone (The Map) - Now Full Screen */}
       <div className="relative h-full w-full overflow-hidden flex flex-col">
         <div className="flex-1 relative overflow-hidden">

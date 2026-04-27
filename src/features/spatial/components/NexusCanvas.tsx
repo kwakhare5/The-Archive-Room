@@ -13,15 +13,15 @@ import { unlockAudio } from '@/shared/lib/engine/notificationSound';
 import { vscode } from '@/shared/lib/apiBridge';
 import { canPlaceFurniture, getWallPlacementRow } from '@/features/editor/logic/editorActions';
 import type { EditorState } from '@/features/editor/logic/editorState';
-import { startGameLoop } from '@/features/spatial/logic/gameLoop';
+import { startGameLoop } from '@/features/spatial/infrastructure/canvas/GameLoop';
 import type { ArchiveEngine } from '@/features/spatial/logic/ArchiveEngine';
 import type {
   DeleteButtonBounds,
   EditorRenderState,
   RotateButtonBounds,
   SelectionRenderState,
-} from '@/features/spatial/logic/renderer';
-import { renderFrame } from '@/features/spatial/logic/renderer';
+} from '@/features/spatial/infrastructure/canvas/Renderer';
+import { renderFrame } from '@/features/spatial/infrastructure/canvas/Renderer';
 import { hasFloorSprites } from '@/shared/lib/engine/floorTiles';
 import { getCatalogEntry, isCatalogReady, isRotatable } from '@/features/spatial/logic/furnitureCatalog';
 import { getDPR } from '@/shared/lib/engine/agentToolParser';
@@ -276,9 +276,34 @@ export function NexusCanvas({
           archiveEngine.getLayout().tileColors,
           archiveEngine.getLayout().cols,
           archiveEngine.getLayout().rows,
-          archiveEngine.getLayout().furniture,
         );
         offsetRef.current = { x: offsetX, y: offsetY };
+
+        // --- Red Screen Test (Debug Overlay) ---
+        // Render a diagnostic dot at the target destination of any walking agent
+        ctx.save();
+        ctx.translate(offsetX, offsetY);
+        ctx.scale(zoom, zoom);
+        for (const ch of archiveEngine.getCharacters()) {
+          if (ch.state === 'walk' && ch.path.length > 0) {
+            const target = ch.path[ch.path.length - 1];
+            ctx.fillStyle = '#ff0000';
+            ctx.beginPath();
+            ctx.arc(target.col * 32 + 16, target.row * 32 + 16, 4 / zoom, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Draw path line
+            ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
+            ctx.lineWidth = 2 / zoom;
+            ctx.beginPath();
+            ctx.moveTo(ch.x * 32, ch.y * 32);
+            for (const step of ch.path) {
+              ctx.lineTo(step.col * 32 + 16, step.row * 32 + 16);
+            }
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
 
         // Store delete/rotate button bounds for hit-testing
         deleteButtonBoundsRef.current = editorRender?.deleteButtonBounds ?? null;
@@ -676,85 +701,24 @@ export function NexusCanvas({
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
-      if (isEditMode) return; // handled by mouseDown/mouseUp
+      if (isEditMode) return;
       const pos = screenToWorld(e.clientX, e.clientY);
       if (!pos) return;
 
-      const hitId = archiveEngine.getCharacterAt(pos.worldX, pos.worldY);
-      if (hitId !== null) {
-        // Toggle selection: click same agent deselects, different agent selects
-        if (archiveEngine.selectedAgentId === hitId) {
-          archiveEngine.setSelectedAgentId(null);
-          archiveEngine.setCameraFollowId(null);
-        } else {
-          archiveEngine.setSelectedAgentId(hitId);
-          archiveEngine.setCameraFollowId(hitId);
-        }
-        onClick(hitId); // still focus terminal
-        return;
-      }
-
-      // No agent hit — check furniture or seat click
       const tile = screenToTile(e.clientX, e.clientY);
-      if (tile) {
-        // --- Furniture Click Action ---
-        const targetFurniture = archiveEngine.getFurnitureAt(tile.col, tile.row);
-          if (targetFurniture) {
-            // Trigger selection callback for inspector
-            onFurnitureSelect(targetFurniture.uid, (targetFurniture as any).name || targetFurniture.type);
+      const handled = archiveEngine.input.handlePrimaryClick(
+        pos.worldX, 
+        pos.worldY, 
+        tile, 
+        onFurnitureSelect
+      );
 
-            // Default to primary agent if none selected for potential interaction
-            const activeId = archiveEngine.selectedAgentId ?? 1;
-          if (archiveEngine.characters.has(activeId)) {
-            const handled = archiveEngine.handleFurnitureClick(activeId, targetFurniture.uid);
-            if (handled) {
-              // On success, deselect and return
-              archiveEngine.setSelectedAgentId(null);
-              archiveEngine.setCameraFollowId(null);
-              return;
-            }
-          }
-        }
-
-        // --- Seat Assignment Logic ---
-        if (archiveEngine.selectedAgentId !== null) {
-          const selectedCh = archiveEngine.characters.get(archiveEngine.selectedAgentId);
-          // Skip seat reassignment for sub-agents
-          if (selectedCh && !selectedCh.isSubagent) {
-            const seatId = archiveEngine.getSeatAtTile(tile.col, tile.row);
-            if (seatId) {
-              const seat = archiveEngine.seats.get(seatId);
-              if (seat && selectedCh) {
-                if (selectedCh.seatId === seatId) {
-                  // Clicked own seat — send agent back to it
-                  archiveEngine.sendToSeat(archiveEngine.selectedAgentId);
-                  archiveEngine.setSelectedAgentId(null);
-                  archiveEngine.setCameraFollowId(null);
-                  return;
-                } else if (!seat.assigned) {
-                  // Clicked available seat — reassign
-                  archiveEngine.reassignSeat(archiveEngine.selectedAgentId, seatId);
-                  archiveEngine.setSelectedAgentId(null);
-                  archiveEngine.setCameraFollowId(null);
-                  // Persist seat assignments (exclude sub-agents)
-                  const seats: Record<number, { palette: number; seatId: string | null }> = {};
-                  for (const ch of archiveEngine.characters.values()) {
-                    if (ch.isSubagent) continue;
-                    seats[ch.id] = { palette: ch.palette, seatId: ch.seatId };
-                  }
-                  vscode.postMessage({ type: 'saveAgentSeats', seats });
-                  return;
-                }
-              }
-            }
-          }
-        }
-        // Clicked empty space — deselect
-        archiveEngine.setSelectedAgentId(null);
-        archiveEngine.setCameraFollowId(null);
+      if (handled) {
+        const hitId = archiveEngine.getCharacterAt(pos.worldX, pos.worldY);
+        if (hitId !== null) onClick(hitId);
       }
     },
-    [archiveEngine, onClick, screenToWorld, screenToTile, isEditMode],
+    [archiveEngine, onClick, screenToWorld, screenToTile, isEditMode, onFurnitureSelect],
   );
 
   const handleMouseLeave = useCallback(() => {
@@ -772,12 +736,9 @@ export function NexusCanvas({
     (e: React.MouseEvent) => {
       e.preventDefault();
       if (isEditMode) return;
-      // Right-click to walk selected agent to tile
-      if (archiveEngine.selectedAgentId !== null) {
-        const tile = screenToTile(e.clientX, e.clientY);
-        if (tile) {
-          archiveEngine.walkToTile(archiveEngine.selectedAgentId, tile.col, tile.row);
-        }
+      const tile = screenToTile(e.clientX, e.clientY);
+      if (tile) {
+        archiveEngine.input.handleContextMenu(tile.col, tile.row);
       }
     },
     [isEditMode, archiveEngine, screenToTile],

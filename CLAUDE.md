@@ -98,40 +98,31 @@ This project is **fully decoupled from VS Code**. It is a standalone web applica
 ```
 src/                              — Standalone React + Next.js web app (THE APP)
   app/                            — Next.js App Router (page.tsx, layout.tsx, globals.css)
-  components/                     — Shared React components (NexusDashboard, Modals, etc.)
-  hooks/                          — Custom React hooks (useWebSocket, useEditorActions, etc.)
-  lib/
-    engine/                       — The Pixel Rendering Engine
-      constants.ts                — All magic numbers/strings (grid, animation, rendering, camera, zoom, editor, game logic)
-      notificationSound.ts        — Web Audio API chime on agent events, with enable/disable
-      runtime.ts                  — Runtime detection (browser vs webview)
-      vscodeApi.ts                — VS Code API shim (legacy)
-      types.ts                    — Interfaces (ArchiveLayout, FloorColor, Character, etc.)
-      toolUtils.ts                — STATUS_TO_TOOL mapping, extractToolName(), defaultZoom()
-      colorize.ts                 — Dual-mode color module: Colorize (grayscale→HSL) + Adjust (HSL shift)
-      floorTiles.ts               — Floor sprite storage + colorized cache
-      wallTiles.ts                — Wall auto-tile: 16 bitmask sprites from walls.png
-      sprites/
-        spriteData.ts             — Pixel data: characters, furniture, tiles, bubbles
-        spriteCache.ts            — SpriteData → offscreen canvas, per-zoom WeakMap cache, outline sprites
-      editor/
-        editorActions.ts          — Pure layout ops: paint, place, remove, move, rotate, toggleState, canPlace, expandLayout
-        editorState.ts            — Imperative state: tools, ghost, selection, undo/redo, dirty, drag
-        EditorToolbar.tsx         — React toolbar/palette for edit mode
-      layout/
-        furnitureCatalog.ts       — Dynamic catalog from loaded assets + getCatalogEntry()
-        nexusSerializer.ts        — ArchiveLayout ↔ runtime (tileMap, furniture, seats, blocked)
-        tileMap.ts                — Walkability grid, BFS pathfinding
-      engine/
-        characters.ts             — Character FSM: idle/walk/type + wander AI (TO BE REFACTORED)
-        ArchiveEngine.ts          — Game world: layout, characters, seats, selection, subagents
-        gameLoop.ts               — rAF loop with delta time (capped 0.1s)
-        renderer.ts               — Canvas: tiles, z-sorted entities, overlays, edit UI
-        matrixEffect.ts           — Matrix-style spawn/despawn digital rain effect
-      components/
-        NexusCanvas.tsx           — Canvas, resize, DPR, mouse hit-testing, edit interactions, drag-to-move
-        ToolOverlay.tsx           — Activity status label above hovered/selected character + close button
-    bridge.ts                     — PalaceEventBridge: WebSocket communication layer
+  features/                        — Feature-based Clean Architecture modules
+    spatial/                      — Core environment & character visualization
+      domain/                     — Pure business logic (Models, Use Cases)
+        models/                   — Agent, WorldState, Seat, TileType
+        use-cases/                — AgentPhysics, Layout, Command, Seat logic
+      infrastructure/             — Concrete side-effects (Canvas, Persistence)
+        canvas/                   — Renderer.ts, GameLoop.ts, SpriteSelector.ts
+        persistence/              — VscodeWorldNotifier.ts
+      logic/                      — Interface Adapters / Orchestration
+        ArchiveEngine.ts          — System Controller (Orchestrator)
+        nexusSerializer.ts        — Domain ↔ Persistence data mapping
+        furnitureCatalog.ts       — Dynamic asset registry
+        tileMap.ts                — Walkability & BFS pathfinding
+      components/                 — Feature-specific UI (NexusCanvas, Dashboard)
+    editor/                       — Layout editing feature
+      logic/                      — editorActions, editorState
+    agents/                       — Visual agent effects (MatrixEffect)
+  shared/                         — Global cross-cutting concerns
+    types/                        — Unified project types
+    constants/                    — config.ts (Magic numbers/config)
+    lib/                          — Common engine libraries
+      engine/                     — colorize, floorTiles, wallTiles, spriteCache
+      apiBridge.ts                — VS Code / Browser communication
+      bridge.ts                   — PalaceEventBridge (WebSocket layer)
+    hooks/                        — Shared React hooks (useExtensionMessages)
 
 public/                           — Static assets (Sprites, Fonts, Banners)
   assets/                         — PNGs, furniture-catalog.json
@@ -173,8 +164,9 @@ Protocol:    JSON over WebSocket (PalaceEventBridge) with Multi-Step Queuing
 
 ---
 
-## 🛠️ Tech Bible Alignment Audit (2026-04-23)
+## 🛠️ Tech Bible Alignment Audit (2026-04-27)
 - [x] **Stack**: Next.js 16 + Tailwind v4 + FastAPI (Elite Stack)
+- [x] **Architecture**: Clean Architecture (Domain/Infra/Adapter) [HARDENED]
 - [x] **AI**: Gemini Flash (Native Integration)
 - [x] **Persistence**: Git Checkpoints (Mandatory)
 - [x] **Resume Goal**: "Real-time AI spatial reasoning engine with 60FPS canvas rendering."

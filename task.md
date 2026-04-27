@@ -7,9 +7,20 @@
 - `[x]` **Dashboard Integration**
     - `[x]` Update `NexusDashboard.tsx` for always-open sidebar
     - `[x]` Migrate "Context Property" display to Sidebar
-- `[ ]` **Cleanup & Hardening**
-    - `[ ]` Remove `KnowledgeInspector.tsx`
-    - `[ ]` Remove `AgentQueryInput.tsx`
-- `[ ]` **Verification**
-    - `[ ]` Red Screen Test (Verification)
-    - `[ ]` Test mobile responsiveness (Collapsible Sidebar)
+- `[x]` **Cleanup & Hardening**
+    - `[x]` Remove `KnowledgeInspector.tsx`
+    - `[x]` Remove `AgentQueryInput.tsx`
+- `[x]` **Verification**
+    - `[x]` Red Screen Test (Verification)
+    - `[x]` Test mobile responsiveness (Collapsible Sidebar)
+- [x] Phase 1: Domain Layer Hardening
+- [x] Phase 2: Infrastructure & Adapters
+- [x] Phase 3: Controller/Orchestrator Sync
+- [x] Phase 4: Final Hardening & Build Verification
+    - [x] Resolve `Renderer.ts` Sprite logic
+    - [x] Fix `AgentPhysics.ts` pixel-to-tile coordinate system
+    - [x] Resolve `NexusCanvas.tsx` argument mismatch
+    - [x] Implement missing proxy methods in `ArchiveEngine`
+    - [x] Pass `npm run build`
+    - [x] Mandatory "Red Screen Test" diagnostic proof
+    - [x] Test mobile responsiveness (Collapsible Sidebar)

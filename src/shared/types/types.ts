@@ -243,6 +243,8 @@ export interface Character {
   pendingCommand: string | null;
   /** Observer: The specific state transition intended after arrival */
   pendingState: CharacterState | null;
+  /** Internal: Hint for direction character should face after arriving at a furniture target */
+  arrivalFacing?: number;
 
   // -- Agent Teams --
   /** Team name this agent belongs to */

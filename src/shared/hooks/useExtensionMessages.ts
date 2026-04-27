@@ -399,8 +399,8 @@ export function useExtensionMessages(
         });
         engine.clearPermissionBubble(id);
         // Also clear permission bubbles on all sub-agent characters of this parent
-        for (const [subId, meta] of engine.subagentMeta) {
-          if (meta.parentAgentId === id) {
+        for (const [subId, ch] of engine.characters.entries()) {
+          if (ch.isSubagent && ch.parentAgentId === id) {
             engine.clearPermissionBubble(subId);
           }
         }
