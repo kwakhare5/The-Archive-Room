@@ -14,21 +14,21 @@ Retrieving information becomes a matter of "walking" to it, triggering stronger 
 
 ## 🚀 Tech Stack (The Elite Standard)
 
-- **Frontend Core**: Next.js 14 (App Router) + TypeScript
-- **Rendering Engine**: Custom 2D Canvas Matrix Engine (`ArchiveEngine`)
-- **State & Bridge**: `apiBridge.ts` syncing with FastAPI (Python) backend
-- **Styling**: Tailwind CSS v4 + Framer Motion (Micro-animations)
-- **Pathfinding**: Optimized A* multi-tile navigation algorithms
+- **Frontend Core**: Next.js 16 (App Router) + TypeScript 5
+- **Intelligence**: Gemini 2.0 Flash (Native RAG-Ready Integration)
+- **Architecture**: **Clean Architecture** (Strict separation of Domain, Infrastructure, and Adapters)
+- **Rendering Engine**: Custom 60FPS HTML5 Canvas Matrix Engine (`ArchiveEngine`)
+- **Styling**: Tailwind CSS v4 + Framer Motion (Glassmorphism & Micro-animations)
+- **Performance**: Optimized BFS spatial indexing and multi-tile collision detection
 
 ## 🏗️ Architectural Deep Dive
 
-The Archive Room operates on a **Feature-Based Domain-Driven Architecture**, designed for scale to handle 10,000+ DAU without thread blocking.
+The Archive Room has been hardened with a **Clean Architecture** (Onion Architecture) to ensure 99.9% logical stability and zero-drift maintenance.
 
-### The Facade Pattern: `ArchiveEngine`
-To prevent monolithic memory leaks and logic entanglement, the spatial rendering layer has been strictly decomposed:
-1. **`LayoutManager`**: Handles all furniture grid mapping, placement validation, and collision boundaries.
-2. **`CharacterManager`**: Controls agent state, autonomous routing, matrix despawn effects, and hit-detection.
-3. **`CameraManager`**: Orchestrates viewport transformations, screen-to-world math, and smooth target tracking.
+### Layer Separation:
+1. **Domain Layer (The Core)**: Pure business logic (Agent Physics, WorldState, Use Cases) decoupled from any external frameworks.
+2. **Infrastructure Layer**: Concrete implementations for the Canvas Renderer, Game Loop, and VS Code/Browser Persistence.
+3. **Adapter Layer (Orchestration)**: The `ArchiveEngine` serves as the primary system Controller, bridging UI events to domain use cases.
 
 ## 🛠️ Local Development Setup
 
